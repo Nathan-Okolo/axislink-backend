@@ -20,8 +20,10 @@ app.use(morgan('combined'));
 
 
 const port = env.port;
+const baseURL = env.node_env === 'development' ? '/axislink/api/v1' : '/axislink/api/v1/stag';
 
-app.use('/spowse/api/v1', rootRouter)
+
+app.use(baseURL, rootRouter)
 
 
 app.use('*', (req, res) => {
