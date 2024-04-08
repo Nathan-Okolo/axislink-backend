@@ -21,7 +21,7 @@ app.use(morgan('combined'));
 
 const port = env.port;
 
-app.use('/spowse/api/v1', rootRouter)
+app.use('/axislink/api/v1', rootRouter)
 
 
 app.use('*', (req, res) => {
