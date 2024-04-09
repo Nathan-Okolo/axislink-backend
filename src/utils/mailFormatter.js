@@ -6,7 +6,7 @@ export const formattMailInfo = async (data, env) => {
         to: data.email,
         from: {
           email: env.sendgrid_sender,
-          name: 'SPOWSE'
+          name: 'AXISLINK'
         },
         subject: data.subject,
         dynamic_template_data: data.dtd,
@@ -16,7 +16,7 @@ export const formattMailInfo = async (data, env) => {
       message = {
         to: data.email,
         from: {
-          name: 'SPOWSE',
+          name: 'AXISLINK',
           email: env.sendgrid_sender
         },
         subject: data.subject,
