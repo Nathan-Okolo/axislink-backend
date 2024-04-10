@@ -1,7 +1,7 @@
 import express from "express";
 import { LoginHandler, signUpHandler, verifyOtpHandler } from "../../controller/authentication/authControllers.js";
 import Validate from "../../validators/index.js";
-import { otpCodeSchema, signUpSchema, validateLoginUserSchema } from "../../validators/userSchema/authValidators.js";
+import { otpCodeSchema, signUpSchema, validateLoginUserSchema } from "../../validators/authValidators.js";
 
 const userAuthRoutes = express.Router();
 
