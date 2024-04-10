@@ -1,5 +1,10 @@
 import env from "../../config/env.js";
-import { BadRequestError, NotFoundError } from "../../lib/appErrors.js";
+import {
+  BadRequestError,
+  InternalServerError,
+  NotFoundError,
+} from "../../lib/appErrors.js";
+import postModel from "../../models/postModel.js";
 import userModel from "../../models/userModel.js";
 
 export const viewProfile = async ({ user }) => {
@@ -7,10 +12,8 @@ export const viewProfile = async ({ user }) => {
   if (!userProfile) {
     throw new NotFoundError("User is not found");
   }
-  return userProfile
+  return userProfile;
 };
-
-
 
 export const updateUserProfile = async ({ user }) => {
   try {
@@ -38,3 +41,4 @@ export const updateUserProfile = async ({ user }) => {
     throw new BadRequestError(e.response.data.message);
   }
 };
+

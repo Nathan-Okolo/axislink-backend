@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const { Schema, model } = mongoose;
 
@@ -6,11 +6,15 @@ const postSchema = new Schema(
   {
     userId: { type: Schema.Types.ObjectId, ref: 'User' },
     content: { type: String, required: true },
-    likesCount: { type: Number, default: 0 },
-    repostsCount: { type: Number, default: 0 },
-    originalPostId: { type: Schema.Types.ObjectId, ref: 'Post' }, // For reposts
+    media: [{ type: String }],
+    likes: [{ type: Schema.Types.ObjectId, ref: 'Like' }],
+    repostedBy: [{ type: Schema.Types.ObjectId, ref: 'User' }], // Track users who reposted the post
+    comments: [{ type: Schema.Types.ObjectId, ref: 'Comment' }],
+    hashtags: [{ type: String }], // Array of hashtags
+    mentions: [{ type: Schema.Types.ObjectId, ref: 'User' }], // Mentioned users
+    originalPostId: { type: Schema.Types.ObjectId, ref: 'Post' },
   },
   { timestamps: true }
 );
 
-export default model('Post', postSchema);
+export default model("Post", postSchema);

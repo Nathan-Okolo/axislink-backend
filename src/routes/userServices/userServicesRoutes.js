@@ -6,16 +6,6 @@ const userServiceRoutes = express.Router();
 
 const userRoute = () => {
   userServiceRoutes.get("/view", authentication, viewProfileHandler);
-  //   userServiceRoutes.post(
-  //     "/otp-verification",
-  //     Validate(otpCodeSchema),
-  //     verifyOtpHandler
-  //   );
-  //   userServiceRoutes.post(
-  //     "/login",
-  //     Validate(validateLoginUserSchema),
-  //     LoginHandler
-  //   );
 
   return userServiceRoutes;
 };
