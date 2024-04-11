@@ -18,10 +18,12 @@ const userSchema = new Schema(
       lowercase: true,
       index: true,
     },
-    otpCode: { type: String, default: '' },
+    otpCode: { type: String, default: "" },
     password: { type: String, default: "" },
     bio: { type: String, default: "" },
-    avatar: { type: String, default: "" },
+    avatar: {
+      key: { type: String },
+    },
     acctstatus: {
       type: String,
       enum: ["pending", "active", "declined", "suspended"],
