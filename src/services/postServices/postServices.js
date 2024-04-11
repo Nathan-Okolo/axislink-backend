@@ -389,12 +389,52 @@ export const viewAllPostComment = async ({ post_id, page, limit }) => {
   }
 };
 
-export const deletePost = async (post_id) => {
-  const deletedPost = await postModel.findOneAndDelete({
-    _id: post_id,
-    userId: user_id,
-  });
-  if (!deletedPost) throw new NotFoundError("post not found");
+export const deletePost = async ({post_id}) => {
+  try {
+    // Find the post to be deleted
+    const post = await postModel.findById(post_id);
+    if (!post) {
+      throw new NotFoundError("Post not found");
+    }
 
-  return { message: "Post deleted successfully" };
+    // Delete all associated comments
+    await commentModel.deleteMany({ postId: post_id });
+
+    // Delete all associated likes
+    await likeModel.deleteMany({ postId: post_id });
+
+    // Delete all associated reposts
+    await postModel.deleteMany({ originalPostId: post_id });
+
+    // Remove post ID from any original posts
+    await postModel.updateMany(
+      { originalPostId: post_id },
+      { $unset: { originalPostId: 1 } }
+    );
+
+    // Remove post ID from any mentions
+    await userModel.updateMany(
+      { mentions: post_id },
+      { $pull: { mentions: post_id } }
+    );
+
+    // Remove post ID from any hashtags
+    await userModel.updateMany(
+      { hashtags: post_id },
+      { $pull: { hashtags: post_id } }
+    );
+
+    // Remove post ID from any reposts
+    await userModel.updateMany(
+      { repostedBy: post_id },
+      { $pull: { repostedBy: post_id } }
+    );
+
+    // Finally, delete the post
+    await postModel.findByIdAndDelete(post_id);
+
+    return { message: "Post and associated items deleted successfully" };
+  } catch (error) {
+    throw new Error(`Failed to delete post: ${error.message}`);
+  }
 };
