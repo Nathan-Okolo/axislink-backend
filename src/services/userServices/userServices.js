@@ -6,6 +6,8 @@ import {
 } from "../../lib/appErrors.js";
 import postModel from "../../models/postModel.js";
 import userModel from "../../models/userModel.js";
+import likeModel from "../../models/likeModel.js";
+import commentModel from "../../models/commentModel.js";
 
 export const viewProfile = async ({ user }) => {
   const userProfile = await userModel.findOne(user._id);
@@ -42,3 +44,35 @@ export const updateUserProfile = async ({ user }) => {
   }
 };
 
+export const deleteUserProfile = async (user) => {
+  try {
+    // Delete all posts created by the user
+    await postModel.deleteMany({ userId: user._id });
+
+    // Delete all comments created by the user
+    await commentModel.deleteMany({ userId: user._id });
+
+    // Delete all likes by the user
+    await likeModel.deleteMany({ userId: user._id });
+
+    // Remove user ID from mentions in other posts
+    await postModel.updateMany(
+      { mentions: user._id },
+      { $pull: { mentions: user._id } }
+    );
+
+    // Remove user ID from repostedBy in other posts
+    await postModel.updateMany(
+      { repostedBy: user._id },
+      { $pull: { repostedBy: user._id } }
+    );
+
+    // Finally, delete the user profile
+    await userModel.findByIdAndDelete(user._id);
+
+    // Ensure that changes are saved
+    return { message: "User profile and associated data deleted successfully" };
+  } catch (error) {
+    throw new Error(`Failed to delete user profile: ${error.message}`);
+  }
+};
