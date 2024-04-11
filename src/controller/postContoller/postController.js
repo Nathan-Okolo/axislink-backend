@@ -1,10 +1,14 @@
 import appResponse from "../../lib/appResponse.js";
 import {
+  createComment,
   deletePost,
+  likeComment,
   likePost,
   makePost,
   repostPost,
+  viewAllPostComment,
   viewAllPosts,
+  viewPostComment,
   viewSinglePost,
 } from "../../services/postServices/postServices.js";
 
@@ -16,8 +20,18 @@ export const makePostHandler = async (req, res) => {
   res.send(appResponse("Succefully made a new post", newPost));
 };
 
+export const createCommentHandler = async (req, res) => {
+  const { body, user } = req;
+  const { post_id } = req.params;
+
+  const newPost = await createComment({ body, user, post_id });
+
+  res.send(appResponse("Succefully made a comment", newPost));
+};
+
 export const viewAllPostsHandler = async (req, res) => {
-  const posts = await viewAllPosts({});
+  const { page, limit } = req.query;
+  const posts = await viewAllPosts({ page, limit });
 
   res.send(appResponse("Fatched all post succefully", posts));
 };
@@ -30,6 +44,23 @@ export const viewSinglePostHandler = async (req, res) => {
   res.send(appResponse("viewing single post successfully", post));
 };
 
+export const viewPostCommentHandler = async (req, res) => {
+  const { comment_id, post_id } = req.params;
+
+  const comment = await viewPostComment({ comment_id, post_id });
+
+  res.send(appResponse("viewing single post comment successfully", comment));
+};
+
+export const viewAllPostCommentHandler = async (req, res) => {
+  const { post_id } = req.params;
+  const { page, limit } = req.query;
+
+  const comments = await viewAllPostComment({ post_id, page, limit });
+
+  res.send(appResponse("viewing all post comments successfully", comments));
+};
+
 export const likePostHandler = async (req, res) => {
   const { user } = req;
   const { post_id } = req.params;
@@ -39,12 +70,21 @@ export const likePostHandler = async (req, res) => {
   res.send(appResponse("succefully liked or unliked a post", post));
 };
 
+export const likeCommentHandler = async (req, res) => {
+  const { user } = req;
+  const { comment_id } = req.params;
+
+  const comment = await likeComment({ user, comment_id });
+
+  res.send(appResponse("succefully liked or unliked a comment", comment));
+};
+
 export const repostPostHandler = async (req, res) => {
   const { user, body } = req;
   const { post_id } = req.params;
-  const { content } = body;
+  console.log(post_id);
 
-  const repost = await repostPost({ user, post_id, content });
+  const repost = await repostPost({ user, post_id, body });
 
   res.send(appResponse("succefully reposted a post", repost));
 };
