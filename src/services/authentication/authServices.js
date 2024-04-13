@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import {
   BadRequestError,
   InternalServerError,
+  InvalidError,
   NotFoundError,
 } from "../../lib/appErrors.js";
 import userModel from "../../models/userModel.js";
@@ -138,7 +139,7 @@ export const loginUser = async ({ body }) => {
 
   // Compare passwords
   const isMatch = await bcrypt.compare(password, checkUser.password);
-  
+
   // If passwords do not match, throw error
   if (!isMatch) {
     throw new InvalidError("Invalid email or password");
@@ -159,4 +160,58 @@ export const loginUser = async ({ body }) => {
 
   // Return token
   return { token };
+};
+
+export const forgotPassword = async ({ body }) => {
+  const {email} = body
+  const checkUser = await userModel.findOne({email});
+  if (!checkUser) throw new NotFoundError("account does not exist");
+
+  const otpCode = await codeGenerator(6, "1234567890");
+
+  // const hashNewPassword = await bcrypt.hash(newPassword, 10);
+
+  const hash = buildOtpHash(email, otpCode, env.otpKey, 15);
+
+  // checkMember.password = hashNewPassword
+  checkUser.password = hash;
+
+  checkUser.save();
+
+  // Send OTP email
+  const mailData = {
+    email: body.email,
+    subject: "Password Reset",
+    type: "html",
+    html: `<p>Your OTP for account Password Reset is: ${otpCode}</p>`,
+    text: `Your OTP for account Password Reset is: ${otpCode}`,
+  };
+
+  const formattedMailInfo = await formattMailInfo(mailData, env);
+  const msgDelivered = await messageBird(formattedMailInfo);
+
+  if (!msgDelivered) {
+    throw new InternalServerError("Failed to send Password Reset email");
+  }
+
+  // return { email: checkMember.contact.email };
+  return { hash: hash, email: body.email };
+};
+
+export const resetPassword = async ({ body, email }) => {
+  const { code, hash } = body;
+
+  const checkUser = await userModel.findOne(body.email);
+  if (!checkUser) throw new NotFoundError("account does not exist");
+
+  const verifyOtp = verifyOTP(email, code, hash, env.otpKey);
+  if (!verifyOtp) throw new InvalidError("Wrong otp code");
+
+  const password = await bcrypt.hash(body.password, 12);
+
+  checkUser.password = password;
+
+  await checkUser.save();
+
+  return true;
 };
