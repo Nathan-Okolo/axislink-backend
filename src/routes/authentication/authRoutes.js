@@ -2,6 +2,7 @@ import express from "express";
 import {
   LoginHandler,
   forgotPasswordHandler,
+  resendOtpHandler,
   resetPasswordHandler,
   signUpHandler,
   verifyOtpHandler,
@@ -38,6 +39,11 @@ const authRoute = () => {
     "/reset_password",
     Validate(validateResetForgotPassword),
     resetPasswordHandler
+  );
+  userAuthRoutes.post(
+    "/resend-otp",
+    Validate(validateForgotPassword),
+    resendOtpHandler
   );
 
   return userAuthRoutes;
