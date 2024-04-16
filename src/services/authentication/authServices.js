@@ -224,7 +224,7 @@ export const resetPassword = async ({ body, email }) => {
   return true;
 };
 
-export const resendOtp = async ({ body }) => {
+export const resendOtp = async ({ body }) => { 
   const checkUser = await userModel.findOne({ email: body.email });
 
   if (!checkUser) throw new NotFoundError("User does not exists");

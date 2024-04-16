@@ -8,6 +8,7 @@ import postModel from "../../models/postModel.js";
 import userModel from "../../models/userModel.js";
 import likeModel from "../../models/likeModel.js";
 import commentModel from "../../models/commentModel.js";
+import cloudinary from "../../utils/cloudinary.js";
 
 export const viewProfile = async ({ user }) => {
   const userProfile = await userModel.findOne(user._id);
