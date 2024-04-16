@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "description": "backend service for the spowse service",
   "main": "server.js",
-	"type": "module",
-
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon src/server.js"
@@ -22,6 +21,7 @@
   "dependencies": {
     "@sendgrid/mail": "^7.7.0",
     "bcrypt": "^5.1.0",
+    "cloudinary": "^2.1.0",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
@@ -29,7 +29,8 @@
     "joi": "^17.8.3",
     "jsonwebtoken": "^9.0.0",
     "mongoose": "^7.0.1",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1"
   },
   "devDependencies": {
     "nodemon": "^2.0.21",

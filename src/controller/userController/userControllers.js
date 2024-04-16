@@ -1,5 +1,8 @@
 import appResponse from "../../lib/appResponse.js";
-import { deleteUserProfile, viewProfile } from "../../services/userServices/userServices.js";
+import {
+  deleteUserProfile,
+  viewProfile,
+} from "../../services/userServices/userServices.js";
 
 export const viewProfileHandler = async (req, res) => {
   const { user } = req;

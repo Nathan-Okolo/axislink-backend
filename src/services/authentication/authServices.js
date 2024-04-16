@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import {
   BadRequestError,
   InternalServerError,
+  InvalidError,
   NotFoundError,
 } from "../../lib/appErrors.js";
 import userModel from "../../models/userModel.js";
@@ -114,7 +115,9 @@ export const userOtpVerifcation = async ({ body, email }) => {
   // Clear OTP code and mark user as verified
   user.otpCode = "";
   user.isVerified = true;
+  const randToken = await codeGenerator(4, "1234ABCD");
 
+  user.token = randToken;
   // Generate JWT token
   const token = jwt.sign({ ...user.toJSON() }, env.jwt_key);
 
@@ -138,7 +141,7 @@ export const loginUser = async ({ body }) => {
 
   // Compare passwords
   const isMatch = await bcrypt.compare(password, checkUser.password);
-  
+
   // If passwords do not match, throw error
   if (!isMatch) {
     throw new InvalidError("Invalid email or password");
@@ -151,6 +154,12 @@ export const loginUser = async ({ body }) => {
     );
   }
 
+  const randToken = await codeGenerator(4, "1234ABCD");
+
+  //save token inside user
+  checkUser.token = randToken;
+  await checkUser.save();
+
   // Convert user to JSON
   const user = checkUser.toJSON();
 
@@ -159,4 +168,94 @@ export const loginUser = async ({ body }) => {
 
   // Return token
   return { token };
+};
+
+export const forgotPassword = async ({ body }) => {
+  const { email } = body;
+  const checkUser = await userModel.findOne({ email });
+  if (!checkUser) throw new NotFoundError("account does not exist");
+
+  const otpCode = await codeGenerator(6, "1234567890");
+
+  // const hashNewPassword = await bcrypt.hash(newPassword, 10);
+
+  const hash = buildOtpHash(email, otpCode, env.otpKey, 15);
+
+  // checkMember.password = hashNewPassword
+  checkUser.password = hash;
+
+  checkUser.save();
+
+  // Send OTP email
+  const mailData = {
+    email: body.email,
+    subject: "Password Reset",
+    type: "html",
+    html: `<p>Your OTP for account Password Reset is: ${otpCode}</p>`,
+    text: `Your OTP for account Password Reset is: ${otpCode}`,
+  };
+
+  const formattedMailInfo = await formattMailInfo(mailData, env);
+  const msgDelivered = await messageBird(formattedMailInfo);
+
+  if (!msgDelivered) {
+    throw new InternalServerError("Failed to send Password Reset email");
+  }
+
+  // return { email: checkMember.contact.email };
+  return { hash: hash, email: body.email };
+};
+
+export const resetPassword = async ({ body, email }) => {
+  const { code, hash } = body;
+
+  const checkUser = await userModel.findOne(body.email);
+  if (!checkUser) throw new NotFoundError("account does not exist");
+
+  const verifyOtp = verifyOTP(email, code, hash, env.otpKey);
+  if (!verifyOtp) throw new InvalidError("Wrong otp code");
+
+  const password = await bcrypt.hash(body.password, 12);
+
+  checkUser.password = password;
+
+  await checkUser.save();
+
+  return true;
+};
+
+export const resendOtp = async ({ body }) => { 
+  const checkUser = await userModel.findOne({ email: body.email });
+
+  if (!checkUser) throw new NotFoundError("User does not exists");
+  // Check if OTP is verified
+  if (checkUser.isVerified) {
+    throw new BadRequestError("Acount already verified");
+  }
+
+  const rawOtpCode = await codeGenerator(6, "1234567890");
+
+  const hash = buildOtpHash(body.email, rawOtpCode, env.otpKey, 10);
+
+  checkUser.otpCode = hash;
+
+  checkUser.save();
+
+  // Send OTP email
+  const mailData = {
+    email: body.email,
+    subject: "OTP for Account Verification",
+    type: "html",
+    html: `<p>Your OTP for account verification is: ${rawOtpCode}</p>`,
+    text: `Your OTP for account verification is: ${rawOtpCode}`,
+  };
+
+  const formattedMailInfo = await formattMailInfo(mailData, env);
+  const msgDelivered = await messageBird(formattedMailInfo);
+
+  if (!msgDelivered) {
+    throw new InternalServerError("Failed to send OTP email");
+  }
+
+  return { hash, email: body.email };
 };

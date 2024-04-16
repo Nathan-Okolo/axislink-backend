@@ -11,13 +11,22 @@ export const authentication = async (req, res, next) => {
     const token = authorization.replace("Bearer ", "");
 
     const decoded = jwt.verify(token, env.jwt_key);
-    if (!decoded) throw new UnAuthorizedError("Invalid token, user is not authorized");
+    if (!decoded)
+      throw new UnAuthorizedError("Invalid token, user is not authorized");
 
     const user = await userModel.findById(decoded._id);
 
     if (!user) throw new UnAuthorizedError("User is not authorized");
 
-    if (user.acctstatus === "suspended") throw new UnAuthorizedError("Account suspended");
+    // Check if decoded token matches user token
+    if (decoded.token !== user.token) {
+      throw new UnAuthorizedError(
+        "Invalid token, user is not authorized login again"
+      );
+    }
+
+    if (user.acctstatus === "suspended")
+      throw new UnAuthorizedError("Account suspended");
 
     req.user = user;
     req.token = token;
@@ -28,7 +37,6 @@ export const authentication = async (req, res, next) => {
     throw new UnAuthorizedError(err.message || "User is not authorized");
   }
 };
-
 
 export const dbconnection = (req, res, next) => {
   req.dbConnection = secondDb;

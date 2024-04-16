@@ -22,5 +22,9 @@ export default {
     dev_base_url_org: `https://akilaah-organization.vercel.app`,
     dev_base_url_member: `https://akilaah-member.vercel.app`,
     prod_base_url_member: `https://member.akilaah.com`,
-    prod_base_url_org: `https://organization.akilaah.com`
+    prod_base_url_org: `https://organization.akilaah.com`,
+    cloud_name: process.env.CLOUD_NAME,
+    api_key: process.env.API_KEY,
+    api_secret: process.env.API_SECRET,
+    cloudinary_url: process.env.CLOUDINARY_URL
 }
