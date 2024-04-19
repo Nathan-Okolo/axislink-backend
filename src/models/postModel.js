@@ -10,10 +10,10 @@ const postSchema = new Schema(
       key: { type: String },
     },
     likes: [{ type: Schema.Types.ObjectId, ref: "Like" }],
-    repostedBy: [{ type: Schema.Types.ObjectId, ref: "User" }], // Track users who reposted the post
+    repostedBy: [{ type: Schema.Types.ObjectId, ref: "User" }],
     comments: [{ type: Schema.Types.ObjectId, ref: "Comment" }],
-    hashtags: [{ type: String }], // Array of hashtags
-    mentions: [{ type: Schema.Types.ObjectId, ref: "User" }], // Mentioned users
+    hashtags: [{ type: String }],
+    mentions: [{ type: Schema.Types.ObjectId, ref: "User" }],
     originalPostId: { type: Schema.Types.ObjectId, ref: "Post" },
   },
   { timestamps: true }

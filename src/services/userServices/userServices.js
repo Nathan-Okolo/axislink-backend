@@ -11,7 +11,7 @@ import commentModel from "../../models/commentModel.js";
 import cloudinary from "../../utils/cloudinary.js";
 
 export const viewProfile = async ({ user }) => {
-  const userProfile = await userModel.findOne(user._id);
+  const userProfile = await userModel.findOne(user._id).populate({path: "posts"}).populate({path:"likes"});
   if (!userProfile) {
     throw new NotFoundError("User is not found");
   }

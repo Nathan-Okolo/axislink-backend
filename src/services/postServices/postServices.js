@@ -47,6 +47,10 @@ export const makePost = async ({ user, body }) => {
     );
   }
 
+  user.posts.push(newPost._id);
+
+  await user.save();
+
   return newPost;
 };
 
@@ -121,11 +125,6 @@ export const viewSinglePost = async ({ post_id }) => {
   return post;
 };
 
-// export const viewPostLikes = async ({ user, post_id }) => {
-//   const likes = await likeModel.findOne({ post_id });
-//   return likes;
-// };
-
 export const likePost = async ({ user, post_id }) => {
   try {
     // Find the post
@@ -133,7 +132,8 @@ export const likePost = async ({ user, post_id }) => {
     if (!post) {
       throw new NotFoundError("Post not found");
     }
-
+    const ownerId = post.userId;
+    const postOwner = await userModel.findById(ownerId);
     // Find the like document in the likes model
     const like = await likeModel.findOne({
       postId: post_id,
@@ -160,6 +160,7 @@ export const likePost = async ({ user, post_id }) => {
 
       // Add the like ID to the post.likes array
       post.likes.push(newLike._id);
+      postOwner.likes.push(newLike._id);
     }
 
     // Save the updated post
@@ -256,9 +257,6 @@ export const createComment = async ({ post_id, user, body }) => {
       content: body.content,
       hashtags,
       mentions,
-      media: {
-        key: body.media.key,
-      },
     };
 
     const newComment = await commentModel.create(commentData);
@@ -389,7 +387,7 @@ export const viewAllPostComment = async ({ post_id, page, limit }) => {
   }
 };
 
-export const deletePost = async ({post_id}) => {
+export const deletePost = async ({ post_id }) => {
   try {
     // Find the post to be deleted
     const post = await postModel.findById(post_id);
@@ -438,3 +436,5 @@ export const deletePost = async ({post_id}) => {
     throw new Error(`Failed to delete post: ${error.message}`);
   }
 };
+
+// calculate points based on likes and save to user

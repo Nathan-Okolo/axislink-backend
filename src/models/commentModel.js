@@ -13,7 +13,7 @@ const commentSchema = new Schema(
       key: { type: String },
     },
     likes: [{ type: Schema.Types.ObjectId, ref: "Like" }],
-    parentCommentId: { type: Schema.Types.ObjectId, ref: "Comment" }, // Reference to parent comment
+    parentCommentId: { type: Schema.Types.ObjectId, ref: "Comment" },
   },
   { timestamps: true }
 );
