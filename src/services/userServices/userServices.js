@@ -11,7 +11,10 @@ import commentModel from "../../models/commentModel.js";
 import cloudinary from "../../utils/cloudinary.js";
 
 export const viewProfile = async ({ user }) => {
-  const userProfile = await userModel.findOne(user._id).populate({path: "posts"}).populate({path:"likes"});
+  const userProfile = await userModel
+    .findOne(user._id)
+    .populate({ path: "posts" })
+    .populate({ path: "likes" });
   if (!userProfile) {
     throw new NotFoundError("User is not found");
   }
@@ -76,4 +79,34 @@ export const deleteUserProfile = async (user) => {
   } catch (error) {
     throw new Error(`Failed to delete user profile: ${error.message}`);
   }
+};
+
+export const getUserPoint = async ({ user }) => {
+  const userPosts = await postModel
+    .find({ userId: user._id })
+    .populate("likes");
+  if (!userPosts) {
+    throw new NotFoundError("likes not found");
+  }
+  const userComments = await commentModel
+    .find({ userId: user._id })
+    .populate("likes");
+  if (!userComments) {
+    throw new NotFoundError("likes not found");
+  }
+  // Combine likes from both posts and comments into one array
+  let allLikes = [];
+  userPosts.forEach((post) => {
+    allLikes = allLikes.concat(post.likes);
+  });
+  userComments.forEach((comment) => {
+    allLikes = allLikes.concat(comment.likes);
+  });
+  const likeCount = allLikes.length;
+  const points = likeCount / 2;
+  user.likes = likeCount;
+  user.points = points;
+  await user.save();
+
+  return { points, likeCount, user };
 };
