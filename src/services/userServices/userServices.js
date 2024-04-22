@@ -14,7 +14,6 @@ export const viewProfile = async ({ user }) => {
   const userProfile = await userModel
     .findOne(user._id)
     .populate({ path: "posts" })
-    .populate({ path: "likes" });
   if (!userProfile) {
     throw new NotFoundError("User is not found");
   }
