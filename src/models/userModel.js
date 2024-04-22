@@ -23,9 +23,7 @@ const userSchema = new Schema(
     bio: { type: String, default: "" },
     posts: [{ type: Schema.Types.ObjectId, ref: "Post" }],
     points: { type: Number, default: 0 },
-    avatar: {
-      key: { type: String },
-    },
+    avatar: { type: String, required: false },
     acctstatus: {
       type: String,
       enum: ["pending", "active", "declined", "suspended"],
@@ -34,6 +32,8 @@ const userSchema = new Schema(
     },
     isVerified: { type: Boolean, default: false },
     token: { type: String },
+    followers: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    following: [{ type: Schema.Types.ObjectId, ref: "User" }],
   },
   { timestamps: true }
 );

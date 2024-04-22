@@ -103,6 +103,62 @@ export const viewAllPosts = async ({ page, limit }) => {
   }
 };
 
+export const viewFollowersPost = async ({ user, page, limit }) => {
+  try {
+    const pageNumber = parseInt(page) || 1;
+    const pageSize = parseInt(limit) || 10;
+
+    // Calculate the skip value based on the page and limit
+    const skip = (pageNumber - 1) * pageSize;
+
+    // Find the users followed by the current user
+    const userId = user._id;
+    const followingUsers = await userModel.findById(userId).select("following");
+
+    // Extract the IDs of the users followed by the current user
+    const followingUserIds = followingUsers.following;
+
+    // Fetch posts from the database made by users followed by the current user,
+    // sorted by createdAt field in descending order (newest first)
+    const [posts, totalPosts] = await Promise.all([
+      postModel
+        .find({ userId: { $in: followingUserIds } }) // Find posts by users followed by the current user
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(pageSize)
+        .populate({
+          path: "originalPostId",
+          populate: {
+            path: "userId",
+            select: "username",
+          },
+        })
+        .populate({
+          path: "comments",
+          populate: {
+            path: "userId",
+            select: "username",
+          },
+        })
+        .populate("userId", "username"),
+      postModel.countDocuments({ userId: { $in: followingUserIds } }), // Count total posts by users followed by the current user
+    ]);
+
+    // Calculate total number of pages
+    const totalPages = Math.ceil(totalPosts / pageSize);
+
+    // Return posts along with total posts count, current page number, and total pages
+    return {
+      totalPosts,
+      currentPage: pageNumber,
+      totalPages,
+      posts,
+    };
+  } catch (error) {
+    throw new Error(`Failed to fetch posts: ${error.message}`);
+  }
+};
+
 export const viewSinglePost = async ({ post_id }) => {
   const post = await postModel
     .findById(post_id)
