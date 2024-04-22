@@ -82,16 +82,30 @@ export const deleteUserProfile = async (user) => {
 };
 
 export const getUserPoint = async ({ user }) => {
-  const likes = await postModel.find({ userId: user._id }).populate("likes");
-  if (!likes) {
-    throw new NotFoundError("likez not found");
+  const userPosts = await postModel
+    .find({ userId: user._id })
+    .populate("likes");
+  if (!userPosts) {
+    throw new NotFoundError("likes not found");
   }
+  const userComments = await commentModel
+    .find({ userId: user._id })
+    .populate("likes");
+  if (!userComments) {
+    throw new NotFoundError("likes not found");
+  }
+  // Combine likes from both posts and comments into one array
   let allLikes = [];
-  likes.forEach((post) => {
+  userPosts.forEach((post) => {
     allLikes = allLikes.concat(post.likes);
+  });
+  userComments.forEach((comment) => {
+    allLikes = allLikes.concat(comment.likes);
   });
   const likeCount = allLikes.length;
   const points = likeCount / 2;
+  user.points = points;
+  await user.save();
 
-  return { points, likeCount };
+  return { points, likeCount, user };
 };

@@ -8,6 +8,7 @@ import postModel from "../../models/postModel.js";
 import likeModel from "../../models/likeModel.js";
 import commentModel from "../../models/commentModel.js";
 import userModel from "../../models/userModel.js";
+import { getUserPoint } from "../userServices/userServices.js";
 
 export const makePost = async ({ user, body }) => {
   const hashtagRegex = /#[\w-]+/g;
@@ -132,8 +133,6 @@ export const likePost = async ({ user, post_id }) => {
     if (!post) {
       throw new NotFoundError("Post not found");
     }
-    const ownerId = post.userId;
-    const postOwner = await userModel.findById(ownerId);
     // Find the like document in the likes model
     const like = await likeModel.findOne({
       postId: post_id,
@@ -163,6 +162,8 @@ export const likePost = async ({ user, post_id }) => {
 
     // Save the updated post
     await post.save();
+    const updatedUser = await userModel.findById(post.userId);
+    await getUserPoint({ user: updatedUser });
 
     // Return the updated post
     return post;
@@ -314,9 +315,11 @@ export const likeComment = async ({ user, comment_id }) => {
 
     // Save the updated post
     await comment.save();
+    const updatedUser = await userModel.findById(comment.userId);
+    const { points } = await getUserPoint({ user: updatedUser });
 
     // Return the updated post
-    return comment;
+    return { comment, points };
   } catch (error) {
     throw new Error(`Failed to like/unlike a comment: ${error.message}`);
   }

@@ -22,7 +22,7 @@ const userSchema = new Schema(
     password: { type: String, default: "" },
     bio: { type: String, default: "" },
     posts: [{ type: Schema.Types.ObjectId, ref: "Post" }],
-    points: [{ type: Schema.Types.ObjectId, ref: "Like" }],
+    points: { type: Number, default: 0 },
     avatar: {
       key: { type: String },
     },
