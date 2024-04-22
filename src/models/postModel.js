@@ -7,7 +7,7 @@ const postSchema = new Schema(
     userId: { type: Schema.Types.ObjectId, ref: "User" },
     content: { type: String, required: true },
     media: {
-      key: { type: String },
+      key: [{ type: String }],
     },
     likes: [{ type: Schema.Types.ObjectId, ref: "Like" }],
     repostedBy: [{ type: Schema.Types.ObjectId, ref: "User" }],
