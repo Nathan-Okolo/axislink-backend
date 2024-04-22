@@ -23,6 +23,7 @@ const userSchema = new Schema(
     bio: { type: String, default: "" },
     posts: [{ type: Schema.Types.ObjectId, ref: "Post" }],
     points: { type: Number, default: 0 },
+    likes: { type: Number, default: 0 },
     avatar: {
       key: { type: String },
     },
