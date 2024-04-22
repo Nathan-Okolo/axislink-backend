@@ -47,6 +47,7 @@ export const signUpUser = async ({ body }) => {
       password,
       otpCode: hash,
       isVerified,
+      avatar: body.avatar,
     };
     const createUser = await userModel.create(data);
     if (!createUser) {
@@ -208,7 +209,7 @@ export const forgotPassword = async ({ body }) => {
 export const resetPassword = async ({ body, email }) => {
   const { code, hash } = body;
 
-  const checkUser = await userModel.findOne({email});
+  const checkUser = await userModel.findOne({ email });
   if (!checkUser) throw new NotFoundError("account does not exist");
 
   const verifyOtp = verifyOTP(email, code, hash, env.otpKey);
