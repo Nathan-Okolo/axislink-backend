@@ -157,10 +157,8 @@ export const likePost = async ({ user, post_id }) => {
         userId: user._id,
         type: "comment",
       });
-
       // Add the like ID to the post.likes array
       post.likes.push(newLike._id);
-      postOwner.likes.push(newLike._id);
     }
 
     // Save the updated post
@@ -436,5 +434,3 @@ export const deletePost = async ({ post_id }) => {
     throw new Error(`Failed to delete post: ${error.message}`);
   }
 };
-
-// calculate points based on likes and save to user
