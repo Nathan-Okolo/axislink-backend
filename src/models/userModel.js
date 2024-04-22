@@ -34,6 +34,8 @@ const userSchema = new Schema(
     },
     isVerified: { type: Boolean, default: false },
     token: { type: String },
+    followers: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    following: [{ type: Schema.Types.ObjectId, ref: "User" }],
   },
   { timestamps: true }
 );

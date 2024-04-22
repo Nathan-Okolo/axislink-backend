@@ -13,16 +13,69 @@ import cloudinary from "../../utils/cloudinary.js";
 export const viewProfile = async ({ user }) => {
   const userProfile = await userModel
     .findOne(user._id)
-    .populate({ path: "posts" })
+    .populate({ path: "posts" });
   if (!userProfile) {
     throw new NotFoundError("User is not found");
   }
   return userProfile;
 };
 
-export const updateUserProfile = async ({ user }) => {
+export const followUser = async ({ user, userIdToFollow }) => {
   try {
-    const { username, bio, avatar } = req.body;
+    // Find the user to be followed/unfollowed from the database
+    const userToFollow = await userModel.findById(userIdToFollow);
+
+    // Check if the user to be followed/unfollowed exists
+    if (!userToFollow) {
+      throw new Error("User not found");
+    }
+
+    // Check if the current user is already following the user to be followed/unfollowed
+    const isFollowing = user.following.includes(userIdToFollow);
+
+    // Toggle follow/unfollow action based on current following status
+    if (isFollowing) {
+      // If the current user is already following the user to be followed, unfollow them
+      // Remove the user to be unfollowed from the current user's following array
+      const followingIndex = user.following.indexOf(userIdToFollow);
+      if (followingIndex !== -1) {
+        user.following.splice(followingIndex, 1);
+      }
+
+      // Remove the current user from the user to be unfollowed's followers array
+      const followerIndex = userToFollow.followers.indexOf(user._id);
+      if (followerIndex !== -1) {
+        userToFollow.followers.splice(followerIndex, 1);
+      }
+    } else {
+      // If the current user is not following the user to be followed, follow them
+      // Add the user to be followed to the current user's following array
+      user.following.push(userIdToFollow);
+
+      // Add the current user to the user to be followed's followers array
+      userToFollow.followers.push(user._id);
+    }
+
+    // Save the changes to both user documents
+    await user.save();
+    await userToFollow.save();
+
+    // Return success message
+    return {
+      message: "Operation successful",
+      user: user,
+      userToFollow: userToFollow,
+    };
+  } catch (error) {
+    // Handle errors
+    console.error(error);
+    throw new Error("Failed to follow/unfollow user");
+  }
+};
+
+export const updateUserProfile = async ({ user, body }) => {
+  try {
+    const { username, bio, avatar } = body;
 
     // Find the user by ID
     const userDetials = await userModel.findById(user._id);
@@ -41,9 +94,10 @@ export const updateUserProfile = async ({ user }) => {
     await userDetials.save();
 
     // Return the updated user profile
-    res.json(userDetials);
+    return user;
   } catch (e) {
-    throw new BadRequestError(e.response.data.message);
+    console.log("error", e);
+    throw new BadRequestError("and error occoure");
   }
 };
 
