@@ -3,7 +3,7 @@ import Joi from "joi";
 export const postSchema = Joi.object({
   content: Joi.string().required(),
   media: Joi.object({
-    key: Joi.string().required(),
+    key: Joi.array().items(Joi.string().required()).required(),
   }).optional(),
 });
 
@@ -18,7 +18,7 @@ export const likeComment = Joi.object({
 export const rePostSchema = Joi.object({
   content: Joi.string().optional().default(""),
   media: Joi.object({
-    key: Joi.string().required(),
+    key: Joi.array().items(Joi.string().required()).required(),
   }).optional(),
 });
 
