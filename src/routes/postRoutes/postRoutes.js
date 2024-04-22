@@ -10,6 +10,7 @@ import {
   repostPostHandler,
   viewAllPostCommentHandler,
   viewAllPostsHandler,
+  viewFollowersPostHandler,
   viewPostCommentHandler,
   viewSinglePostHandler,
 } from "../../controller/postContoller/postController.js";
@@ -36,6 +37,11 @@ const postRoute = () => {
     createCommentHandler
   );
   postServiceRoutes.get("/view-all-posts", viewAllPostsHandler);
+  postServiceRoutes.get(
+    "/view-all-follow-posts",
+    authentication,
+    viewFollowersPostHandler
+  );
   postServiceRoutes.get(
     "/view-single-posts/:post_id",
     Validate(viewPost, "params"),

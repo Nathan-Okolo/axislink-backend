@@ -4,6 +4,7 @@ import {
   followUser,
   getUserPoint,
   updateUserProfile,
+  viewConnection,
   viewProfile,
 } from "../../services/userServices/userServices.js";
 
@@ -11,7 +12,21 @@ export const viewProfileHandler = async (req, res) => {
   const { user } = req;
   const profile = await viewProfile({ user });
 
-  res.send(appResponse("new user onboarded successfully", profile));
+  res.send(appResponse("viewing profile", profile));
+};
+
+export const viewConnectionHandler = async (req, res) => {
+  const { user } = req;
+  const profile = await viewConnection({ user });
+
+  res.send(appResponse("viewing connections", profile));
+};
+
+export const viewMemberHandler = async (req, res) => {
+  const { user } = req;
+  const profile = await viewMember({ user });
+
+  res.send(appResponse("viewing connections", profile));
 };
 
 export const getUserPointHandler = async (req, res) => {

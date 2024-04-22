@@ -73,6 +73,19 @@ export const followUser = async ({ user, userIdToFollow }) => {
   }
 };
 
+export const viewConnection = async ({ user }) => {
+  const userProfile = await userModel
+    .findOne(user._id)
+    .populate({ path: "followers" })
+    .populate({ path: "following" });
+  if (!userProfile) {
+    throw new NotFoundError("User is not found");
+  }
+  const followers = userProfile.followers;
+  const following = userProfile.following;
+  return { followers: followers, following: following };
+};
+
 export const updateUserProfile = async ({ user, body }) => {
   try {
     const { username, bio, avatar } = body;

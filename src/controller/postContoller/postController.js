@@ -8,6 +8,7 @@ import {
   repostPost,
   viewAllPostComment,
   viewAllPosts,
+  viewFollowersPost,
   viewPostComment,
   viewSinglePost,
 } from "../../services/postServices/postServices.js";
@@ -34,6 +35,14 @@ export const viewAllPostsHandler = async (req, res) => {
   const posts = await viewAllPosts({ page, limit });
 
   res.send(appResponse("Fatched all post succefully", posts));
+};
+
+export const viewFollowersPostHandler = async (req, res) => {
+  const { page, limit } = req.query;
+  const { user } = req;
+  const posts = await viewFollowersPost({ page, limit, user });
+
+  res.send(appResponse("Fatched all users following post succefully", posts));
 };
 
 export const viewSinglePostHandler = async (req, res) => {
