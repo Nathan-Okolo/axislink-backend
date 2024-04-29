@@ -2,6 +2,7 @@ import appResponse from "../../lib/appResponse.js";
 import {
   deleteUserProfile,
   followUser,
+  getLeaderBoard,
   getUserPoint,
   updateUserProfile,
   viewConnection,
@@ -49,6 +50,12 @@ export const updateUserProfileHandler = async (req, res) => {
   const profile = await updateUserProfile({ user, body });
 
   res.send(appResponse("profile updated successfully", profile));
+};
+
+export const leaderBoardHandler = async (req, res) => {
+  const board = await getLeaderBoard();
+
+  res.send(appResponse("leaderboard fetched succefully", board));
 };
 
 export const deleteUserProfileHandler = async (req, res) => {
