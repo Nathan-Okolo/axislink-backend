@@ -9,6 +9,7 @@ import userModel from "../../models/userModel.js";
 import likeModel from "../../models/likeModel.js";
 import commentModel from "../../models/commentModel.js";
 import cloudinary from "../../utils/cloudinary.js";
+import notificationModel from "../../models/notificationModel.js";
 
 export const viewProfile = async ({ user }) => {
   const userProfile = await userModel
@@ -54,6 +55,12 @@ export const followUser = async ({ user, userIdToFollow }) => {
 
       // Add the current user to the user to be followed's followers array
       userToFollow.followers.push(user._id);
+
+      // create notification for member
+      await notificationModel.create({
+        note: `${user.username} followed you`,
+        user_id: userToFollow._id,
+      });
     }
 
     // Save the changes to both user documents
@@ -105,6 +112,12 @@ export const updateUserProfile = async ({ user, body }) => {
 
     // Save the updated user profile
     await userDetials.save();
+
+    // create notification for member
+    await notificationModel.create({
+      note: `you have updated your profile detials succefully`,
+      user_id: user._id,
+    });
 
     // Return the updated user profile
     return user;
@@ -175,4 +188,14 @@ export const getUserPoint = async ({ user }) => {
   await user.save();
 
   return { points, likeCount, user };
+};
+
+export const getLeaderBoard = async () => {
+  const leaderboard = await userModel
+    .find({}, "username points")
+    .sort({ points: -1 });
+  if (!leaderboard) {
+    throw new BadRequestError("no leaderboard found");
+  }
+  return leaderboard;
 };

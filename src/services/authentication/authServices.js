@@ -15,6 +15,7 @@ import {
 import { formattMailInfo } from "../../utils/mailFormatter.js";
 import { messageBird } from "../../utils/msgBird.js";
 import env from "../../config/env.js";
+import notificationModel from "../../models/notificationModel.js";
 
 export const signUpUser = async ({ body }) => {
   try {
@@ -69,7 +70,11 @@ export const signUpUser = async ({ body }) => {
     if (!msgDelivered) {
       throw new InternalServerError("Failed to send OTP email");
     }
-
+    // create notification for member
+    await notificationModel.create({
+      note: `You have successfully  created a new account`,
+      user_id: createUser._id,
+    });
     return { hash, email: body.email };
   } catch (error) {
     console.log(error);
@@ -223,6 +228,12 @@ export const resetPassword = async ({ body, email }) => {
   checkUser.token = randToken;
 
   await checkUser.save();
+
+  // create notification for member
+  await notificationModel.create({
+    note: `You have successfully  changed your password`,
+    user_id: checkUser._id,
+  });
 
   return true;
 };

@@ -9,6 +9,7 @@ import likeModel from "../../models/likeModel.js";
 import commentModel from "../../models/commentModel.js";
 import userModel from "../../models/userModel.js";
 import { getUserPoint } from "../userServices/userServices.js";
+import notificationModel from "../../models/notificationModel.js";
 
 export const makePost = async ({ user, body }) => {
   const hashtagRegex = /#[\w-]+/g;
@@ -51,6 +52,12 @@ export const makePost = async ({ user, body }) => {
   user.posts.push(newPost._id);
 
   await user.save();
+
+  // create notification for member
+  await notificationModel.create({
+    note: `You have successfully  created a new post`,
+    user_id: user._id,
+  });
 
   return newPost;
 };
@@ -214,6 +221,12 @@ export const likePost = async ({ user, post_id }) => {
       });
       // Add the like ID to the post.likes array
       post.likes.push(newLike._id);
+
+      // create notification for member
+      await notificationModel.create({
+        note: `${user.username} liked your post`,
+        user_id: post.userId,
+      });
     }
 
     // Save the updated post
@@ -274,6 +287,11 @@ export const repostPost = async ({ user, post_id, body }) => {
     originalPost.repostedBy.push(user._id);
     await originalPost.save();
 
+    // create notification for member
+    await notificationModel.create({
+      note: `${user.username} reposted your post`,
+      user_id: originalPost.userId,
+    });
     return savedRepostPost;
   } catch (error) {
     throw new Error(`Failed to repost post: ${error.message}`);
@@ -327,6 +345,12 @@ export const createComment = async ({ post_id, user, body }) => {
     // Step 5: Save the Updated Post
     await post.save();
 
+    // create notification for member
+    await notificationModel.create({
+      note: `${user.username} commented on your post`,
+      user_id: post.userId,
+    });
+
     return newComment;
   } catch (error) {
     throw new Error(`Failed to create comment: ${error.message}`);
@@ -367,6 +391,12 @@ export const likeComment = async ({ user, comment_id }) => {
 
       // Add the like ID to the comment.likes array
       comment.likes.push(newLike._id);
+
+      // create notification for member
+      await notificationModel.create({
+        note: `${user.username} liked your comment`,
+        user_id: comment.userId,
+      });
     }
 
     // Save the updated post
