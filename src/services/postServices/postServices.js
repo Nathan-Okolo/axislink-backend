@@ -81,17 +81,17 @@ export const viewAllPosts = async ({ page, limit }) => {
           path: "originalPostId",
           populate: {
             path: "userId",
-            select: "username",
+            select: "username avatar",
           },
         })
         .populate({
           path: "comments",
           populate: {
             path: "userId",
-            select: "username",
+            select: "username avatar",
           },
         })
-        .populate("userId", "username"),
+        .populate("userId", "username avatar"),
       postModel.countDocuments(),
     ]);
 
@@ -137,17 +137,17 @@ export const viewFollowersPost = async ({ user, page, limit }) => {
           path: "originalPostId",
           populate: {
             path: "userId",
-            select: "username",
+            select: "username avatar",
           },
         })
         .populate({
           path: "comments",
           populate: {
             path: "userId",
-            select: "username",
+            select: "username avatar",
           },
         })
-        .populate("userId", "username"),
+        .populate("userId", "username avatar"),
       postModel.countDocuments({ userId: { $in: followingUserIds } }), // Count total posts by users followed by the current user
     ]);
 
@@ -173,17 +173,17 @@ export const viewSinglePost = async ({ post_id }) => {
       path: "originalPostId",
       populate: {
         path: "userId",
-        select: "username",
+        select: "username avatar",
       },
     })
     .populate({
       path: "comments",
       populate: {
         path: "userId",
-        select: "username",
+        select: "username avatar",
       },
     })
-    .populate("userId", "username");
+    .populate("userId", "username avatar");
   if (!post) throw new NotFoundError("Post not found");
 
   return post;
