@@ -7,12 +7,14 @@ import {
   leaderBoardHandler,
   updateUserProfileHandler,
   viewConnectionHandler,
+  viewUsereHandler,
   viewProfileHandler,
 } from "../../controller/userController/userControllers.js";
 const userServiceRoutes = express.Router();
 
 const userRoute = () => {
   userServiceRoutes.get("/view", authentication, viewProfileHandler);
+  userServiceRoutes.get("/view-user", viewUsereHandler);
   userServiceRoutes.get("/leader-board", leaderBoardHandler);
   userServiceRoutes.get("/point", authentication, getUserPointHandler);
   userServiceRoutes.get("/connection", authentication, viewConnectionHandler);
