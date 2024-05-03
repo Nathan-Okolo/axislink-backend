@@ -21,6 +21,17 @@ export const viewProfile = async ({ user }) => {
   return userProfile;
 };
 
+export const viewUser = async ({ user_id }) => {
+  const userProfile = await userModel
+    .findById(user_id)
+    .select('-password') 
+    .populate({ path: "posts" });
+  if (!userProfile) {
+    throw new NotFoundError("User is not found");
+  }
+  return userProfile;
+};
+
 export const followUser = async ({ user, userIdToFollow }) => {
   try {
     // Find the user to be followed/unfollowed from the database
