@@ -24,6 +24,7 @@ const userSchema = new Schema(
     posts: [{ type: Schema.Types.ObjectId, ref: "Post" }],
     points: { type: Number, default: 0 },
     avatar: { type: String, required: false },
+    cover_img: { type: String, required: false },
     acctstatus: {
       type: String,
       enum: ["pending", "active", "declined", "suspended"],
