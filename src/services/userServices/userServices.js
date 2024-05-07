@@ -106,13 +106,13 @@ export const viewConnection = async ({ user }) => {
 
 export const updateUserProfile = async ({ user, body }) => {
   try {
-    const { username, bio, avatar } = body;
+    const { username, bio, avatar, cover_img } = body;
 
     // Find the user by ID
     const userDetials = await userModel.findById(user._id);
 
     // Check if user exists
-    if (!user) {
+    if (!userDetials) {
       throw new NotFoundError("user not found");
     }
 
@@ -120,13 +120,14 @@ export const updateUserProfile = async ({ user, body }) => {
     userDetials.username = username || userDetials.username;
     userDetials.bio = bio || userDetials.bio;
     userDetials.avatar = avatar || userDetials.avatar;
+    userDetials.avatar = cover_img || userDetials.cover_img;
 
     // Save the updated user profile
     await userDetials.save();
 
     // create notification for member
     await notificationModel.create({
-      note: `you have updated your profile detials succefully`,
+      note: `You have updated your profile detials succefully`,
       user_id: user._id,
     });
 
