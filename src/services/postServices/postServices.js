@@ -523,3 +523,4 @@ export const deletePost = async ({ post_id }) => {
     throw new Error(`Failed to delete post: ${error.message}`);
   }
 };
+
