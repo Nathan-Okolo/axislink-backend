@@ -11,7 +11,8 @@ export const fetchNotificaitons = async ({ user }) => {
     .find({
       user_id: user._id,
     })
-    .sort({ createdAt: -1 });
+    .sort({ createdAt: -1 })
+    .populate('user_id', 'username')
 
   for (let notification of notifications) {
     notification.is_read = true;
