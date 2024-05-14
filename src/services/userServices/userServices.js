@@ -204,7 +204,7 @@ export const getUserPoint = async ({ user }) => {
 
 export const getLeaderBoard = async () => {
   const leaderboard = await userModel
-    .find({}, "username points")
+    .find({}, "username points avatar")
     .sort({ points: -1 });
   if (!leaderboard) {
     throw new BadRequestError("no leaderboard found");
