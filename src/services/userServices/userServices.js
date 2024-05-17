@@ -12,9 +12,10 @@ import cloudinary from "../../utils/cloudinary.js";
 import notificationModel from "../../models/notificationModel.js";
 
 export const viewProfile = async ({ user }) => {
-  const userProfile = await userModel
-    .findOne(user._id)
-    .populate({ path: "posts" });
+  const userProfile = await userModel.findOne(user._id).populate({
+    path: "posts",
+    populate: { path: "comments" }, // Populate comments within posts
+  });
   if (!userProfile) {
     throw new NotFoundError("User is not found");
   }
@@ -24,8 +25,11 @@ export const viewProfile = async ({ user }) => {
 export const viewUser = async ({ user_id }) => {
   const userProfile = await userModel
     .findById(user_id)
-    .select('-password') 
-    .populate({ path: "posts" });
+    .select("-password")
+    .populate({
+      path: "posts",
+      populate: { path: "comments" }, // Populate comments within posts
+    });
   if (!userProfile) {
     throw new NotFoundError("User is not found");
   }
