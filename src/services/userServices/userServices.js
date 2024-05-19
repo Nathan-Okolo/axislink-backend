@@ -198,7 +198,7 @@ export const getUserPoint = async ({ user }) => {
     allLikes = allLikes.concat(comment.likes);
   });
   const likeCount = allLikes.length;
-  const points = likeCount / 2;
+  const points = likeCount / 10;
   user.likes = likeCount;
   user.points = points;
   await user.save();
