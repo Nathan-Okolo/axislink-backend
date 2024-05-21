@@ -215,3 +215,38 @@ export const getLeaderBoard = async () => {
   }
   return leaderboard;
 };
+
+export const search = async (query) => {
+  if (!query) {
+    throw new Error("Query is required");
+  }
+
+  try {
+    // Perform searches in parallel
+    const [userResults, postResults] = await Promise.all([
+      userModel.find({
+        $or: [
+          { username: new RegExp(query, "i") }, // Search usernames
+          { bio: new RegExp(query, "i") }, // Search bios
+        ],
+      }),
+      postModel.find({
+        $or: [
+          { content: new RegExp(query, "i") }, // Search post content
+          { hashtags: new RegExp(query, "i") }, // Search hashtags
+        ],
+      }),
+    ]);
+
+    // Combine results into a single object
+    const results = {
+      users: userResults,
+      posts: postResults,
+      tags: [], // Placeholder for tags, implement if needed
+    };
+
+    return results;
+  } catch (err) {
+    throw new Error(err.message);
+  }
+};
