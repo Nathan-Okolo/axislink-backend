@@ -124,7 +124,7 @@ export const updateUserProfile = async ({ user, body }) => {
     userDetials.username = username || userDetials.username;
     userDetials.bio = bio || userDetials.bio;
     userDetials.avatar = avatar || userDetials.avatar;
-    userDetials.avatar = cover_img || userDetials.cover_img;
+    userDetials.cover_img = cover_img || userDetials.cover_img;
 
     // Save the updated user profile
     await userDetials.save();
@@ -136,7 +136,7 @@ export const updateUserProfile = async ({ user, body }) => {
     });
 
     // Return the updated user profile
-    return user;
+    return userDetials;
   } catch (e) {
     console.log("error", e);
     throw new BadRequestError("and error occoure");
