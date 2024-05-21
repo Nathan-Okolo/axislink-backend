@@ -9,6 +9,7 @@ import {
   viewConnectionHandler,
   viewUsereHandler,
   viewProfileHandler,
+  searchHandler,
 } from "../../controller/userController/userControllers.js";
 const userServiceRoutes = express.Router();
 
@@ -16,6 +17,7 @@ const userRoute = () => {
   userServiceRoutes.get("/view", authentication, viewProfileHandler);
   userServiceRoutes.get("/view-user", viewUsereHandler);
   userServiceRoutes.get("/leader-board", leaderBoardHandler);
+  userServiceRoutes.get("/search", searchHandler);
   userServiceRoutes.get("/point", authentication, getUserPointHandler);
   userServiceRoutes.get("/connection", authentication, viewConnectionHandler);
   userServiceRoutes.post("/follow", authentication, followUserHandler);

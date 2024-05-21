@@ -8,6 +8,7 @@ import {
   viewConnection,
   viewUser,
   viewProfile,
+  search,
 } from "../../services/userServices/userServices.js";
 
 export const viewProfileHandler = async (req, res) => {
@@ -22,6 +23,12 @@ export const viewUsereHandler = async (req, res) => {
   const profile = await viewUser({ user_id });
 
   res.send(appResponse("viewing another users profile", profile));
+};
+
+export const searchHandler = async (req, res) => {
+  const { query } = req.query;
+  const results = await search(query);
+  res.send(appResponse("searching", results));
 };
 
 export const viewConnectionHandler = async (req, res) => {
