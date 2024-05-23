@@ -474,7 +474,7 @@ export const viewAllPostComment = async ({ post_id, page, limit }) => {
   }
 };
 
-export const deletePost = async ({ post_id }) => {
+export const deletePost = async ({ user, post_id }) => {
   try {
     // Find the post to be deleted
     const post = await postModel.findById(post_id);
@@ -517,10 +517,14 @@ export const deletePost = async ({ post_id }) => {
 
     // Finally, delete the post
     await postModel.findByIdAndDelete(post_id);
+    const updatedUser = await userModel.findById(user._id);
+    const { points } = await getUserPoint({ user: updatedUser });
 
-    return { message: "Post and associated items deleted successfully" };
+    return {
+      message: "Post and associated items deleted successfully",
+      points,
+    };
   } catch (error) {
     throw new Error(`Failed to delete post: ${error.message}`);
   }
 };
-
