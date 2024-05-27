@@ -206,15 +206,15 @@ export const getUserPoint = async ({ user }) => {
   return { points, likeCount, user };
 };
 
-export const getLeaderBoard = async () => {
-  const leaderboard = await userModel
-    .find({}, "username points avatar")
-    .sort({ points: -1 });
-  if (!leaderboard) {
-    throw new BadRequestError("no leaderboard found");
-  }
-  return leaderboard;
-};
+// export const getLeaderBoard = async () => {
+//   const leaderboard = await userModel
+//     .find({}, "username points avatar")
+//     .sort({ points: -1 });
+//   if (!leaderboard) {
+//     throw new BadRequestError("no leaderboard found");
+//   }
+//   return leaderboard;
+// };
 
 export const search = async (query) => {
   if (!query) {
@@ -248,5 +248,67 @@ export const search = async (query) => {
     return results;
   } catch (err) {
     throw new Error(err.message);
+  }
+};
+
+export const getLeaderBoard = async ({ query = {}, user }) => {
+  const { search = "", page = 1, limit = 10 } = query;
+  // Build the search query
+  const searchQuery = search
+    ? { username: { $regex: search, $options: "i" } }
+    : {};
+
+  try {
+    // Find all users to calculate positions
+    const allUsers = await userModel
+      .find(searchQuery, "username points avatar")
+      .sort({ points: -1 });
+
+    if (!allUsers.length) {
+      throw new BadRequestError("No leaderboard found");
+    }
+
+    // Add positions to all users based on their points
+    const allUsersWithPosition = allUsers.map((user, index) => ({
+      position: index + 1,
+      ...user._doc,
+    }));
+
+    // Calculate pagination
+    const skip = (page - 1) * limit;
+    const paginatedUsers = allUsersWithPosition.slice(skip, skip + limit);
+
+    // Find the current user's points and position if the user object is provided
+    let currentUserPoints = null;
+    let currentUserPosition = null;
+    let currentUserName = null;
+    let currentUserAvatar = null;
+    let currentUser_Id = null;
+    if (user && user._id) {
+      const currentUserId = user._id.toString();
+      const currentUser = allUsersWithPosition.find(
+        (u) => u._id.toString() === currentUserId
+      );
+      if (currentUser) {
+        currentUserPoints = currentUser.points;
+        currentUserPosition = currentUser.position;
+        currentUserName = currentUser.username;
+        currentUserAvatar = currentUser.avatar;
+        currentUser_Id = currentUser._id;
+      }
+    }
+
+    return {
+      leaderboard: paginatedUsers,
+      currentUser: {
+        points: currentUserPoints,
+        position: currentUserPosition,
+        name: currentUserName,
+        avatar: currentUserAvatar,
+        _id: currentUser_Id,
+      },
+    };
+  } catch (error) {
+    throw new BadRequestError(error.message || "Error fetching leaderboard");
   }
 };
