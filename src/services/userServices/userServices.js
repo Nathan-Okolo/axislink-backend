@@ -251,8 +251,8 @@ export const search = async (query) => {
   }
 };
 
-export const getLeaderBoard = async ({ query = {}, user }) => {
-  const { search = "", page = 1, limit = 10 } = query;
+export const getLeaderBoard = async ({ query, user }) => {
+  const { search, page = 1, limit = 10 } = query;
   // Build the search query
   const searchQuery = search
     ? { username: { $regex: search, $options: "i" } }
