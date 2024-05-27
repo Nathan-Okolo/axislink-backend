@@ -220,7 +220,7 @@ export const likePost = async ({ user, post_id }) => {
         type: "comment",
       });
       // Add the like ID to the post.likes array
-      post.likes.push(newLike._id);
+      post.likes.push(newLike.userId);
 
       // create notification for member
       await notificationModel.create({

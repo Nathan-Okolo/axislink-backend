@@ -1,5 +1,5 @@
 import express from "express";
-import { authentication } from "../../middlewares/authentication.js";
+import { authentication, check } from "../../middlewares/authentication.js";
 import {
   deleteUserProfileHandler,
   followUserHandler,
@@ -16,7 +16,7 @@ const userServiceRoutes = express.Router();
 const userRoute = () => {
   userServiceRoutes.get("/view", authentication, viewProfileHandler);
   userServiceRoutes.get("/view-user", viewUsereHandler);
-  userServiceRoutes.get("/leader-board", leaderBoardHandler);
+  userServiceRoutes.get("/leader-board", check, leaderBoardHandler);
   userServiceRoutes.get("/search", searchHandler);
   userServiceRoutes.get("/point", authentication, getUserPointHandler);
   userServiceRoutes.get("/connection", authentication, viewConnectionHandler);

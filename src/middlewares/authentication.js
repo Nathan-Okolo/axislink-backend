@@ -43,3 +43,50 @@ export const dbconnection = (req, res, next) => {
 
   next();
 };
+
+export const check = async (req, res, next) => {
+  try {
+    const { authorization } = req.headers;
+    
+    if (!authorization) {
+      // No authorization header, continue without setting user
+      return next();
+    }
+
+    const token = authorization.replace("Bearer ", "");
+
+    const decoded = jwt.verify(token, env.jwt_key);
+    if (!decoded) {
+      // Invalid token, continue without setting user
+      return next();
+    }
+
+    const user = await userModel.findById(decoded._id);
+
+    if (!user) {
+      // User not found, continue without setting user
+      return next();
+    }
+
+    // Check if decoded token matches user token
+    if (decoded.token !== user.token) {
+      // Token mismatch, continue without setting user
+      return next();
+    }
+
+    if (user.acctstatus === "suspended") {
+      // Account suspended, continue without setting user
+      return next();
+    }
+
+    // If all checks pass, attach user and token to request object
+    req.user = user;
+    req.token = token;
+  } catch (err) {
+    console.log(err);
+    // Log the error but continue without setting user
+  }
+
+  // Proceed to the next middleware or route handler
+  next();
+};

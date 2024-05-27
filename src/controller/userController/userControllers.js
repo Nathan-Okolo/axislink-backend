@@ -68,7 +68,9 @@ export const updateUserProfileHandler = async (req, res) => {
 };
 
 export const leaderBoardHandler = async (req, res) => {
-  const board = await getLeaderBoard();
+  const { user } = req;
+  const { query } = req.query;
+  const board = await getLeaderBoard({ query, user });
 
   res.send(appResponse("leaderboard fetched succefully", board));
 };
