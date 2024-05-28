@@ -5,14 +5,14 @@ import {
 } from "../../services/notificationService/notificationService.js";
 
 export const fetchNotificaitonsHandler = async (req, res) => {
-  const { user } = req;
+  const { user, query } = req;
 
-  const response = await fetchNotificaitons({ user });
+  const response = await fetchNotificaitons({ user, query });
 
   res.send(appResponse("fetched notifications successfully", response));
 };
 
-export const markAsReadHandler = async (req, res) => {
+export const markAsReadHandler = async (req, res) => { 
   const { user } = req;
   const { notification_id } = req.query;
 
