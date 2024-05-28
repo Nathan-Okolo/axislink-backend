@@ -10,6 +10,7 @@ import commentModel from "../../models/commentModel.js";
 import userModel from "../../models/userModel.js";
 import { getUserPoint } from "../userServices/userServices.js";
 import notificationModel from "../../models/notificationModel.js";
+import mongoose from "mongoose";
 
 export const makePost = async ({ user, body }) => {
   const hashtagRegex = /#[\w-]+/g;
@@ -190,53 +191,57 @@ export const viewSinglePost = async ({ post_id }) => {
 };
 
 export const likePost = async ({ user, post_id }) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    // Find the post
-    const post = await postModel.findById(post_id);
+    const post = await postModel.findById(post_id).session(session);
     if (!post) {
       throw new NotFoundError("Post not found");
     }
-    // Find the like document in the likes model
+
     const like = await likeModel.findOne({
       postId: post_id,
       userId: user._id,
-    });
+    }).session(session);
 
-    // Check if the like already exists
+    let updatedPost;
     if (like) {
-      // If like exists, remove it from the likes model
-      await likeModel.findByIdAndDelete(like._id);
-
-      // Remove the like ID from the post.likes array
-      const indexToRemove = post.likes.indexOf(like._id);
-      if (indexToRemove !== -1) {
-        post.likes.splice(indexToRemove, 1);
-      }
+      await likeModel.findByIdAndDelete(like._id).session(session);
+      updatedPost = await postModel.findByIdAndUpdate(
+        post_id,
+        { $pull: { likes: like._id } },
+        { new: true, session }
+      );
     } else {
-      // Create a new like document
-      const newLike = await likeModel.create({
+      const newLike = await likeModel.create([{
         postId: post_id,
         userId: user._id,
         type: "comment",
-      });
-      // Add the like ID to the post.likes array
-      post.likes.push(newLike.userId);
+      }], { session });
 
-      // create notification for member
-      await notificationModel.create({
+      updatedPost = await postModel.findByIdAndUpdate(
+        post_id,
+        { $push: { likes: newLike[0]._id } },
+        { new: true, session }
+      );
+
+      await notificationModel.create([{
         note: `${user.username} liked your post`,
         user_id: post.userId,
-      });
+      }], { session });
     }
 
-    // Save the updated post
-    await post.save();
+    await session.commitTransaction();
+    session.endSession();
+
     const updatedUser = await userModel.findById(post.userId);
     await getUserPoint({ user: updatedUser });
 
-    // Return the updated post
-    return post;
+    return updatedPost;
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     throw new Error(`Failed to like/unlike post: ${error.message}`);
   }
 };
