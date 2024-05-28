@@ -1,27 +1,27 @@
 import { NotFoundError } from "../../lib/appErrors.js";
 import notificationModel from "../../models/notificationModel.js";
 
-export const fetchNotificaitons = async ({ user }) => {
-  const unread_notifications = await notificationModel.countDocuments({
-    user_id: user._id,
-    is_read: false,
-  });
+// export const fetchNotificaitons = async ({ user }) => {
+//   const unread_notifications = await notificationModel.countDocuments({
+//     user_id: user._id,
+//     is_read: false,
+//   });
 
-  const notifications = await notificationModel
-    .find({
-      user_id: user._id,
-    })
-    .sort({ createdAt: -1 })
-    .populate('user_id', 'username')
+//   const notifications = await notificationModel
+//     .find({
+//       user_id: user._id,
+//     })
+//     .sort({ createdAt: -1 })
+//     .populate('user_id', 'username')
 
-  for (let notification of notifications) {
-    notification.is_read = true;
+//   for (let notification of notifications) {
+//     notification.is_read = true;
 
-    await notification.save();
-  }
+//     await notification.save();
+//   }
 
-  return { unread_notifications, notifications };
-};
+//   return { unread_notifications, notifications };
+// };
 
 export const markAsReadNotification = async ({ user, notification_id }) => {
   const data = await notificationModel.findOne({
@@ -39,4 +39,49 @@ export const markAsReadNotification = async ({ user, notification_id }) => {
   }
 
   return data;
+};
+
+export const fetchNotificaitons = async ({ user, query }) => {
+  const { limit = 10, page = 1 } = query;
+  const skip = (page - 1) * limit;
+
+  // Run count and find queries in parallel
+  const [unreadNotificationsCount, notifications, unreadNotifications] =
+    await Promise.all([
+      notificationModel.countDocuments({
+        user_id: user._id,
+        is_read: false,
+      }),
+      notificationModel
+        .find({
+          user_id: user._id,
+        })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate("user_id", "username"),
+      notificationModel
+        .find({
+          user_id: user._id,
+          is_read: false,
+        })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate("user_id", "username"),
+    ]);
+
+  // Batch update notifications to mark them as read
+  await notificationModel.updateMany(
+    { _id: { $in: notifications.map((notification) => notification._id) } },
+    { $set: { is_read: true } }
+  );
+
+  return {
+    page,
+    count:limit,
+    unread_notifications: unreadNotificationsCount,
+    notifications,
+    unreadNotifications,
+  };
 };
