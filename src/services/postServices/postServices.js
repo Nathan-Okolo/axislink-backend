@@ -210,11 +210,11 @@ export const likePost = async ({ user, post_id }) => {
       await likeModel.findByIdAndDelete(like._id).session(session);
       updatedPost = await postModel.findByIdAndUpdate(
         post_id,
-        { $pull: { likes: like._id } },
+        { $pull: { likes: user._id } },
         { new: true, session }
       );
     } else {
-      const newLike = await likeModel.create([{
+      await likeModel.create([{
         postId: post_id,
         userId: user._id,
         type: "comment",
@@ -222,7 +222,7 @@ export const likePost = async ({ user, post_id }) => {
 
       updatedPost = await postModel.findByIdAndUpdate(
         post_id,
-        { $push: { likes: newLike[0]._id } },
+        { $push: { likes: user._id } },
         { new: true, session }
       );
 
