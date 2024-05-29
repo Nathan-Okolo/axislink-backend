@@ -238,16 +238,42 @@ export const search = async (query, queryPage, queryLimit) => {
         .limit(limit),
     ]);
 
-    // Combine results into a single object
-    const results = {
-      page: page,
-      limit: limit,
-      users: userResults,
-      posts: postResults,
+    // Calculate total number of users and posts
+    const totalUsers = await userModel.countDocuments({
+      $or: [
+        { username: new RegExp(query, "i") },
+        { bio: new RegExp(query, "i") },
+      ],
+    });
+
+    const totalPosts = await postModel.countDocuments({
+      $or: [
+        { content: new RegExp(query, "i") },
+        { hashtags: new RegExp(query, "i") },
+      ],
+    });
+
+    // Calculate total number of pages for users and posts separately
+    const totalPagesUsers = Math.ceil(totalUsers / limit);
+    const totalPagesPosts = Math.ceil(totalPosts / limit);
+
+    // Return pagination for each array of results
+    return {
+      currentPage: page,
+      totalUsersPages: totalPagesUsers,
+      totalPostsPages: totalPagesPosts,
+      users: {
+        currentPage: page,
+        totalPages: totalPagesUsers,
+        data: userResults,
+      },
+      posts: {
+        currentPage: page,
+        totalPages: totalPagesPosts,
+        data: postResults,
+      },
       tags: [], // Placeholder for tags, implement if needed
     };
-
-    return results;
   } catch (err) {
     throw new Error(err.message);
   }
@@ -280,6 +306,9 @@ export const getLeaderBoard = async ({ query, user }) => {
     const skip = (page - 1) * limit;
     const paginatedUsers = allUsersWithPosition.slice(skip, skip + limit);
 
+    // Calculate total number of pages
+    const totalPages = Math.ceil(allUsersWithPosition.length / limit);
+
     // Find the current user's points and position if the user object is provided
     let currentUserPoints = null;
     let currentUserPosition = null;
@@ -301,7 +330,8 @@ export const getLeaderBoard = async ({ query, user }) => {
     }
 
     return {
-      page: page,
+      currentPage: page,
+      totalPages: totalPages,
       limit: limit,
       leaderboard: paginatedUsers,
       currentUser: {
