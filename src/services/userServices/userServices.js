@@ -206,40 +206,42 @@ export const getUserPoint = async ({ user }) => {
   return { points, likeCount, user };
 };
 
-// export const getLeaderBoard = async () => {
-//   const leaderboard = await userModel
-//     .find({}, "username points avatar")
-//     .sort({ points: -1 });
-//   if (!leaderboard) {
-//     throw new BadRequestError("no leaderboard found");
-//   }
-//   return leaderboard;
-// };
-
-export const search = async (query) => {
+export const search = async (query, queryPage, queryLimit) => {
   if (!query) {
     throw new Error("Query is required");
   }
 
+  const page = queryPage ? parseInt(queryPage, 10) : 1;
+  const limit = queryLimit ? parseInt(queryLimit, 10) : 10;
+  const skip = (page - 1) * limit;
+
   try {
-    // Perform searches in parallel
+    // Perform searches in parallel with pagination
     const [userResults, postResults] = await Promise.all([
-      userModel.find({
-        $or: [
-          { username: new RegExp(query, "i") }, // Search usernames
-          { bio: new RegExp(query, "i") }, // Search bios
-        ],
-      }),
-      postModel.find({
-        $or: [
-          { content: new RegExp(query, "i") }, // Search post content
-          { hashtags: new RegExp(query, "i") }, // Search hashtags
-        ],
-      }),
+      userModel
+        .find({
+          $or: [
+            { username: new RegExp(query, "i") }, // Search usernames
+            { bio: new RegExp(query, "i") }, // Search bios
+          ],
+        })
+        .skip(skip)
+        .limit(limit),
+      postModel
+        .find({
+          $or: [
+            { content: new RegExp(query, "i") }, // Search post content
+            { hashtags: new RegExp(query, "i") }, // Search hashtags
+          ],
+        })
+        .skip(skip)
+        .limit(limit),
     ]);
 
     // Combine results into a single object
     const results = {
+      page: page,
+      limit: limit,
       users: userResults,
       posts: postResults,
       tags: [], // Placeholder for tags, implement if needed
@@ -299,6 +301,8 @@ export const getLeaderBoard = async ({ query, user }) => {
     }
 
     return {
+      page: page,
+      limit: limit,
       leaderboard: paginatedUsers,
       currentUser: {
         points: currentUserPoints,
