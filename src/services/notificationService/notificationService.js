@@ -78,8 +78,8 @@ export const fetchNotificaitons = async ({ user, query }) => {
   );
 
   return {
-    page,
-    count:limit,
+    page: page,
+    limit: limit,
     unread_notifications: unreadNotificationsCount,
     notifications,
     unreadNotifications,
