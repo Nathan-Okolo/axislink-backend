@@ -71,56 +71,29 @@ export const viewAllPosts = async ({ page, limit }) => {
     // Calculate the skip value based on the page and limit
     const skip = (pageNumber - 1) * pageSize;
 
-    // Fetch total count of posts
-    const totalPosts = await postModel.countDocuments();
-
-    // Fetch randomized posts using aggregation pipeline
-    const posts = await postModel.aggregate([
-      { $sample: { size: totalPosts } }, // Randomize the posts
-      { $skip: skip },
-      { $limit: pageSize },
-      {
-        $lookup: {
-          from: "users",
-          localField: "userId",
-          foreignField: "_id",
-          as: "user",
-        },
-      },
-      { $unwind: "$user" },
-      {
-        $lookup: {
-          from: "comments",
-          localField: "_id",
-          foreignField: "postId",
-          as: "comments",
-        },
-      },
-      {
-        $lookup: {
-          from: "posts",
-          localField: "originalPostId",
-          foreignField: "_id",
-          as: "originalPost",
-        },
-      },
-      { $unwind: { path: "$originalPost", preserveNullAndEmptyArrays: true } },
-      {
-        $lookup: {
-          from: "users",
-          localField: "originalPost.userId",
-          foreignField: "_id",
-          as: "originalPostUser",
-        },
-      },
-      { $unwind: { path: "$originalPostUser", preserveNullAndEmptyArrays: true } },
-      {
-        $project: {
-          "user.password": 0, // Exclude sensitive information
-          "comments.user.password": 0,
-          "originalPostUser.password": 0,
-        },
-      },
+    // Fetch posts from the database, sorted by createdAt field in descending order (newest first)
+    const [posts, totalPosts] = await Promise.all([
+      postModel
+        .find({})
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(pageSize)
+        .populate({
+          path: "originalPostId",
+          populate: {
+            path: "userId",
+            select: "username avatar",
+          },
+        })
+        .populate({
+          path: "comments",
+          populate: {
+            path: "userId",
+            select: "username avatar",
+          },
+        })
+        .populate("userId", "username avatar"),
+      postModel.countDocuments(),
     ]);
 
     // Calculate total number of pages
@@ -227,10 +200,12 @@ export const likePost = async ({ user, post_id }) => {
       throw new NotFoundError("Post not found");
     }
 
-    const like = await likeModel.findOne({
-      postId: post_id,
-      userId: user._id,
-    }).session(session);
+    const like = await likeModel
+      .findOne({
+        postId: post_id,
+        userId: user._id,
+      })
+      .session(session);
 
     let updatedPost;
     if (like) {
@@ -241,11 +216,16 @@ export const likePost = async ({ user, post_id }) => {
         { new: true, session }
       );
     } else {
-      await likeModel.create([{
-        postId: post_id,
-        userId: user._id,
-        type: "comment",
-      }], { session });
+      await likeModel.create(
+        [
+          {
+            postId: post_id,
+            userId: user._id,
+            type: "comment",
+          },
+        ],
+        { session }
+      );
 
       updatedPost = await postModel.findByIdAndUpdate(
         post_id,
@@ -253,10 +233,15 @@ export const likePost = async ({ user, post_id }) => {
         { new: true, session }
       );
 
-      await notificationModel.create([{
-        note: `${user.username} liked your post`,
-        user_id: post.userId,
-      }], { session });
+      await notificationModel.create(
+        [
+          {
+            note: `${user.username} liked your post`,
+            user_id: post.userId,
+          },
+        ],
+        { session }
+      );
     }
 
     await session.commitTransaction();
