@@ -65,41 +65,43 @@ export const makePost = async ({ user, body }) => {
 
 export const viewAllPosts = async ({ page, limit }) => {
   try {
-    const pageNumber = parseInt(page) || 1;
-    const pageSize = parseInt(limit) || 10;
+    // Parse page and limit parameters to integers, defaulting to 1 and 10 respectively
+    const pageNumber = parseInt(page, 10) || 1;
+    const pageSize = parseInt(limit, 10) || 10;
 
-    // Calculate the skip value based on the page and limit
+    // Calculate the number of documents to skip based on the current page and page size
     const skip = (pageNumber - 1) * pageSize;
 
-    // Fetch posts from the database, sorted by createdAt field in descending order (newest first)
+    // Fetch posts and total post count concurrently
     const [posts, totalPosts] = await Promise.all([
       postModel
         .find({})
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(pageSize)
+        .sort({ createdAt: -1 }) // Sort posts by creation date in descending order
+        .skip(skip) // Skip the documents based on the calculated skip value
+        .limit(pageSize) // Limit the number of documents returned to pageSize
+        .lean() // Use lean queries for better performance
         .populate({
           path: "originalPostId",
           populate: {
             path: "userId",
-            select: "username avatar",
+            select: "username avatar", // Populate original post's user details
           },
         })
         .populate({
           path: "comments",
           populate: {
             path: "userId",
-            select: "username avatar",
+            select: "username avatar", // Populate comment's user details
           },
         })
-        .populate("userId", "username avatar"),
-      postModel.countDocuments(),
+        .populate("userId", "username avatar"), // Populate post's user details
+      postModel.countDocuments(), // Count the total number of posts
     ]);
 
     // Calculate total number of pages
     const totalPages = Math.ceil(totalPosts / pageSize);
 
-    // Return posts along with total posts count, current page number, and total pages
+    // Return posts along with metadata
     return {
       totalPosts,
       currentPage: pageNumber,
@@ -487,7 +489,7 @@ export const viewAllPostComment = async ({ post_id, page, limit }) => {
       comments: comments,
     };
   } catch (error) {
-    throw new Error(`Failed to fetch comment: ${error.message}`);
+    throw new Error(`Failed to fetch comments: ${error.message}`);
   }
 };
 
