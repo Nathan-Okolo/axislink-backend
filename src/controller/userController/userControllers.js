@@ -26,8 +26,8 @@ export const viewUsereHandler = async (req, res) => {
 };
 
 export const searchHandler = async (req, res) => {
-  const { query } = req.query;
-  const results = await search(query);
+  const { queryPage, queryLimit, query } = req.query;
+  const results = await search(query, queryPage, queryLimit);
   res.send(appResponse("searching", results));
 };
 

@@ -211,68 +211,49 @@ export const search = async (query, queryPage, queryLimit) => {
     throw new Error("Query is required");
   }
 
+  // Parse page and limit from the query parameters, defaulting to 1 and 10 respectively
   const page = queryPage ? parseInt(queryPage, 10) : 1;
   const limit = queryLimit ? parseInt(queryLimit, 10) : 10;
   const skip = (page - 1) * limit;
 
   try {
-    // Perform searches in parallel with pagination
+    // Perform searches in parallel
     const [userResults, postResults] = await Promise.all([
-      userModel
-        .find({
-          $or: [
-            { username: new RegExp(query, "i") }, // Search usernames
-            { bio: new RegExp(query, "i") }, // Search bios
-          ],
-        })
-        .skip(skip)
-        .limit(limit),
-      postModel
-        .find({
-          $or: [
-            { content: new RegExp(query, "i") }, // Search post content
-            { hashtags: new RegExp(query, "i") }, // Search hashtags
-          ],
-        })
-        .skip(skip)
-        .limit(limit),
+      userModel.find({
+        $or: [
+          { username: new RegExp(query, "i") }, // Search usernames
+          { bio: new RegExp(query, "i") }, // Search bios
+        ],
+      }),
+      postModel.find({
+        $or: [
+          { content: new RegExp(query, "i") }, // Search post content
+          { hashtags: new RegExp(query, "i") }, // Search hashtags
+        ],
+      }),
     ]);
 
-    // Calculate total number of users and posts
-    const totalUsers = await userModel.countDocuments({
-      $or: [
-        { username: new RegExp(query, "i") },
-        { bio: new RegExp(query, "i") },
-      ],
-    });
+    // Combine users and posts into a single array
+    const combinedResults = [
+      ...userResults.map(user => ({ type: 'user', ...user.toObject() })),
+      ...postResults.map(post => ({ type: 'post', ...post.toObject() })),
+    ];
 
-    const totalPosts = await postModel.countDocuments({
-      $or: [
-        { content: new RegExp(query, "i") },
-        { hashtags: new RegExp(query, "i") },
-      ],
-    });
+    // Calculate total number of combined results
+    const totalCombinedResults = combinedResults.length;
 
-    // Calculate total number of pages for users and posts separately
-    const totalPagesUsers = Math.ceil(totalUsers / limit);
-    const totalPagesPosts = Math.ceil(totalPosts / limit);
+    // Apply pagination to the combined results
+    const paginatedResults = combinedResults.slice(skip, skip + limit);
 
-    // Return pagination for each array of results
+    // Calculate total number of pages for the combined results
+    const totalPages = Math.ceil(totalCombinedResults / limit);
+
+    // Return paginated combined results
     return {
       currentPage: page,
-      totalUsersPages: totalPagesUsers,
-      totalPostsPages: totalPagesPosts,
-      users: {
-        currentPage: page,
-        totalPages: totalPagesUsers,
-        data: userResults,
-      },
-      posts: {
-        currentPage: page,
-        totalPages: totalPagesPosts,
-        data: postResults,
-      },
-      tags: [], // Placeholder for tags, implement if needed
+      totalPages,
+      totalResults: totalCombinedResults,
+      results: paginatedResults,
     };
   } catch (err) {
     throw new Error(err.message);
