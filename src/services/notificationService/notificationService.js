@@ -41,35 +41,82 @@ export const markAsReadNotification = async ({ user, notification_id }) => {
   return data;
 };
 
+// export const fetchNotificaitons = async ({ user, query }) => {
+//   const { limit = 10, page = 1 } = query;
+//   const skip = (page - 1) * limit;
+
+//   // Run count and find queries in parallel
+//   const [unreadNotificationsCount, notifications, unreadNotifications] =
+//     await Promise.all([
+//       notificationModel.countDocuments({
+//         user_id: user._id,
+//         is_read: false,
+//       }),
+//       notificationModel
+//         .find({
+//           user_id: user._id,
+//         })
+//         .sort({ createdAt: -1 })
+//         .skip(skip)
+//         .limit(limit)
+//         .populate("user_id", "username"),
+//       notificationModel
+//         .find({
+//           user_id: user._id,
+//           is_read: false,
+//         })
+//         .sort({ createdAt: -1 })
+//         .skip(skip)
+//         .limit(limit)
+//         .populate("user_id", "username"),
+//     ]);
+
+//   // Batch update notifications to mark them as read
+//   await notificationModel.updateMany(
+//     { _id: { $in: notifications.map((notification) => notification._id) } },
+//     { $set: { is_read: true } }
+//   );
+
+//   return {
+//     page: page,
+//     limit: limit,
+//     unread_notifications: unreadNotificationsCount,
+//     notifications,
+//     unreadNotifications,
+//   };
+// };
+
 export const fetchNotificaitons = async ({ user, query }) => {
   const { limit = 10, page = 1 } = query;
   const skip = (page - 1) * limit;
 
   // Run count and find queries in parallel
-  const [unreadNotificationsCount, notifications, unreadNotifications] =
-    await Promise.all([
-      notificationModel.countDocuments({
+  const [totalNotificationsCount, unreadNotificationsCount, notifications, unreadNotifications] = await Promise.all([
+    notificationModel.countDocuments({
+      user_id: user._id,
+    }),
+    notificationModel.countDocuments({
+      user_id: user._id,
+      is_read: false,
+    }),
+    notificationModel
+      .find({
+        user_id: user._id,
+      })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate("user_id", "username"),
+    notificationModel
+      .find({
         user_id: user._id,
         is_read: false,
-      }),
-      notificationModel
-        .find({
-          user_id: user._id,
-        })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .populate("user_id", "username"),
-      notificationModel
-        .find({
-          user_id: user._id,
-          is_read: false,
-        })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .populate("user_id", "username"),
-    ]);
+      })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate("user_id", "username"),
+  ]);
 
   // Batch update notifications to mark them as read
   await notificationModel.updateMany(
@@ -77,9 +124,12 @@ export const fetchNotificaitons = async ({ user, query }) => {
     { $set: { is_read: true } }
   );
 
+  const totalPages = Math.ceil(totalNotificationsCount / limit);
+
   return {
-    page: page,
+    current_page: page,
     limit: limit,
+    total_pages: totalPages,
     unread_notifications: unreadNotificationsCount,
     notifications,
     unreadNotifications,
