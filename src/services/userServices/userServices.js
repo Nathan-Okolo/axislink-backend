@@ -143,35 +143,82 @@ export const updateUserProfile = async ({ user, body }) => {
   }
 };
 
+// export const deleteUserProfile = async (user) => {
+//   try {
+//     // Delete all posts created by the user
+//     await postModel.deleteMany({ userId: user._id });
+
+//     // Delete all comments created by the user
+//     await commentModel.deleteMany({ userId: user._id });
+
+//     // Delete all likes by the user
+//     await likeModel.deleteMany({ userId: user._id });
+
+//     // Remove user ID from mentions in other posts
+//     await postModel.updateMany(
+//       { mentions: user._id },
+//       { $pull: { mentions: user._id } }
+//     );
+
+//     // Remove user ID from repostedBy in other posts
+//     await postModel.updateMany(
+//       { repostedBy: user._id },
+//       { $pull: { repostedBy: user._id } }
+//     );
+
+//     // Finally, delete the user profile
+//     await userModel.findByIdAndDelete(user._id);
+
+//     // Ensure that changes are saved
+//     return { message: "User profile and associated data deleted successfully" };
+//   } catch (error) {
+//     throw new Error(`Failed to delete user profile: ${error.message}`);
+//   }
+// };
+
 export const deleteUserProfile = async (user) => {
+const userId = (user.user._id)
+  if (!user || !userId) {
+    throw new Error("Invalid user object or user ID");
+  }
+
   try {
     // Delete all posts created by the user
-    await postModel.deleteMany({ userId: user._id });
+    const deletedPosts = await postModel.deleteMany({ userId });
+    console.log(`Deleted ${deletedPosts.deletedCount} posts`);
 
     // Delete all comments created by the user
-    await commentModel.deleteMany({ userId: user._id });
+    const deletedComments = await commentModel.deleteMany({ userId });
+    console.log(`Deleted ${deletedComments.deletedCount} comments`);
 
     // Delete all likes by the user
-    await likeModel.deleteMany({ userId: user._id });
+    const deletedLikes = await likeModel.deleteMany({ userId });
+    console.log(`Deleted ${deletedLikes.deletedCount} likes`);
 
     // Remove user ID from mentions in other posts
-    await postModel.updateMany(
-      { mentions: user._id },
-      { $pull: { mentions: user._id } }
+    const updatedMentions = await postModel.updateMany(
+      { mentions: userId },
+      { $pull: { mentions: userId } }
     );
+    console.log(`Updated mentions in ${updatedMentions.modifiedCount} posts`);
 
     // Remove user ID from repostedBy in other posts
-    await postModel.updateMany(
-      { repostedBy: user._id },
-      { $pull: { repostedBy: user._id } }
+    const updatedReposts = await postModel.updateMany(
+      { repostedBy: userId },
+      { $pull: { repostedBy: userId } }
     );
+    console.log(`Updated repostedBy in ${updatedReposts.modifiedCount} posts`);
 
     // Finally, delete the user profile
-    await userModel.findByIdAndDelete(user._id);
+    const deletedUser = await userModel.findByIdAndDelete(userId);
+    if (!deletedUser) {
+      throw new Error("User not found");
+    }
 
     // Ensure that changes are saved
     return { message: "User profile and associated data deleted successfully" };
   } catch (error) {
+    console.error(`Failed to delete user profile: ${error.message}`);
     throw new Error(`Failed to delete user profile: ${error.message}`);
   }
 };
