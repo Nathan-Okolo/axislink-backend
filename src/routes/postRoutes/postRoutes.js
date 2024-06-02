@@ -3,6 +3,7 @@ import Validate from "../../validators/index.js";
 import { authentication } from "../../middlewares/authentication.js";
 import {
   createCommentHandler,
+  deleteCommentsHandler,
   deletePostsHandler,
   likeCommentHandler,
   likePostHandler,
@@ -80,6 +81,12 @@ const postRoute = () => {
     Validate(viewPost, "params"),
     authentication,
     deletePostsHandler
+  );
+  postServiceRoutes.delete(
+    "/delete-comment/:post_id",
+    Validate(viewPost, "params"),
+    authentication,
+    deleteCommentsHandler
   );
 
   return postServiceRoutes;

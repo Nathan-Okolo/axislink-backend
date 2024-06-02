@@ -43,6 +43,7 @@ export const signUpUser = async ({ body }) => {
 
     // Save the user to the database
     const data = {
+      displayName:body.displayName,
       username: body.username,
       email: body.email,
       password,

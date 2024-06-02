@@ -110,36 +110,41 @@ export const viewConnection = async ({ user }) => {
 
 export const updateUserProfile = async ({ user, body }) => {
   try {
-    const { username, bio, avatar, cover_img } = body;
+    const { displayName, bio, avatar, cover_img } = body;
 
     // Find the user by ID
-    const userDetials = await userModel.findById(user._id);
+    const userDetails = await userModel.findById(user._id);
 
     // Check if user exists
-    if (!userDetials) {
-      throw new NotFoundError("user not found");
+    if (!userDetails) {
+      throw new NotFoundError("User not found");
+    }
+
+    // Set default displayName if it doesn't exist
+    if (!userDetails.displayName) {
+      userDetails.displayName = "Default DisplayName"; // or generate a displayName based on your logic
     }
 
     // Update user's profile fields
-    userDetials.username = username || userDetials.username;
-    userDetials.bio = bio || userDetials.bio;
-    userDetials.avatar = avatar || userDetials.avatar;
-    userDetials.cover_img = cover_img || userDetials.cover_img;
+    userDetails.displayName = displayName || userDetails.displayName;
+    userDetails.bio = bio || userDetails.bio;
+    userDetails.avatar = avatar || userDetails.avatar;
+    userDetails.cover_img = cover_img || userDetails.cover_img;
 
     // Save the updated user profile
-    await userDetials.save();
+    await userDetails.save();
 
-    // create notification for member
+    // Create notification for user
     await notificationModel.create({
-      note: `You have updated your profile detials succefully`,
+      note: `You have updated your profile details successfully`,
       user_id: user._id,
     });
 
     // Return the updated user profile
-    return userDetials;
+    return userDetails;
   } catch (e) {
-    console.log("error", e);
-    throw new BadRequestError("and error occoure");
+    console.error("error", e);
+    throw new BadRequestError("An error occurred");
   }
 };
 
@@ -177,7 +182,7 @@ export const updateUserProfile = async ({ user, body }) => {
 // };
 
 export const deleteUserProfile = async (user) => {
-const userId = (user.user._id)
+  const userId = user.user._id;
   if (!user || !userId) {
     throw new Error("Invalid user object or user ID");
   }
@@ -282,8 +287,8 @@ export const search = async (query, queryPage, queryLimit) => {
 
     // Combine users and posts into a single array
     const combinedResults = [
-      ...userResults.map(user => ({ type: 'user', ...user.toObject() })),
-      ...postResults.map(post => ({ type: 'post', ...post.toObject() })),
+      ...userResults.map((user) => ({ type: "user", ...user.toObject() })),
+      ...postResults.map((post) => ({ type: "post", ...post.toObject() })),
     ];
 
     // Calculate total number of combined results
