@@ -3,6 +3,7 @@ import {
   BadRequestError,
   InternalServerError,
   NotFoundError,
+  UnAuthorizedError,
 } from "../../lib/appErrors.js";
 import postModel from "../../models/postModel.js";
 import likeModel from "../../models/likeModel.js";
@@ -545,5 +546,56 @@ export const deletePost = async ({ user, post_id }) => {
     };
   } catch (error) {
     throw new Error(`Failed to delete post: ${error.message}`);
+  }
+};
+
+export const deleteComment = async ({ user, post_id, comment_id }) => {
+  try {
+    // Find the post by its ID
+    const post = await postModel.findById(post_id);
+    if (!post) {
+      throw new NotFoundError("Post not found");
+    }
+
+    // Find the specific comment within the post's comments array
+    const commentIndex = post.comments.findIndex((comment) =>
+      comment.equals(comment_id)
+    );
+    if (commentIndex === -1) {
+      throw new NotFoundError("Comment not found");
+    }
+
+    // Check if the user is authorized to delete the comment
+    const comment = await commentModel.findById(comment_id);
+    if (!comment) {
+      throw new NotFoundError("Comment not found");
+    }
+
+    // Ensure the user is either the author of the comment or the post
+    const postOwnerId = post.userId.toString(); 
+    const commentOwnerId = comment.userId.toString(); 
+
+    if (
+      commentOwnerId !== user._id.toString() &&
+      postOwnerId !== user._id.toString()
+    ) {
+      throw new UnAuthorizedError(
+        "You are not authorized to delete this comment"
+      );
+    }
+    // Remove the comment from the post's comments array
+    post.comments.splice(commentIndex, 1);
+
+    // Save the updated post
+    await post.save();
+
+    // Delete the comment document itself from the commentModel
+    await commentModel.findByIdAndDelete(comment_id);
+
+    // Return a success message
+    return { message: "Comment deleted successfully" };
+  } catch (error) {
+    console.error("Failed to delete comment:", error);
+    throw new Error(`Failed to delete comment: ${error.message}`);
   }
 };

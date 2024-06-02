@@ -1,6 +1,7 @@
 import appResponse from "../../lib/appResponse.js";
 import {
   createComment,
+  deleteComment,
   deletePost,
   likeComment,
   likePost,
@@ -105,4 +106,14 @@ export const deletePostsHandler = async (req, res) => {
   const post = await deletePost({ user, post_id });
 
   res.send(appResponse("deleted post successfully", post));
+};
+
+export const deleteCommentsHandler = async (req, res) => {
+  const { user } = req;
+  const { post_id } = req.params;
+  const { comment_id } = req.query;
+
+  const comment = await deleteComment({ user, post_id, comment_id });
+
+  res.send(appResponse("deleted comment successfully", comment));
 };
