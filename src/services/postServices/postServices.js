@@ -64,6 +64,52 @@ export const makePost = async ({ user, body }) => {
   return newPost;
 };
 
+export const viewMyPosts = async ({ user, query }) => {
+  const { limit = 10, page = 1 } = query;
+  const skip = (page - 1) * limit;
+
+  try {
+    const myPosts = await postModel
+      .find({ userId: user._id })
+      .sort({ createdAt: -1 }) // Sorting posts by creation date, most recent first
+      .skip(skip)
+      .limit(limit)
+      .populate({
+        path: "originalPostId",
+        populate: {
+          path: "userId",
+          select: "username avatar",
+        },
+      })
+      .populate({
+        path: "comments",
+        populate: {
+          path: "userId",
+          select: "username avatar",
+        },
+      })
+      .populate("userId", "username avatar");
+
+    if (!myPosts || myPosts.length === 0) {
+      throw new NotFoundError("No posts found");
+    }
+
+    const totalPosts = await postModel.countDocuments({ userId: user._id });
+    const totalPages = Math.ceil(totalPosts / limit);
+
+    return {
+      page,
+      limit,
+      totalPages,
+      totalPosts,
+      posts: myPosts,
+    };
+  } catch (error) {
+    console.error("Failed to fetch user's posts:", error);
+    throw new Error(`Failed to fetch user's posts: ${error.message}`);
+  }
+};
+
 export const viewAllPosts = async ({ page, limit }) => {
   try {
     // Parse page and limit parameters to integers, defaulting to 1 and 10 respectively
@@ -537,6 +583,13 @@ export const deletePost = async ({ user, post_id }) => {
 
     // Finally, delete the post
     await postModel.findByIdAndDelete(post_id);
+
+    // Remove post ID from the user's posts array
+    await userModel.findByIdAndUpdate(
+      user._id,
+      { $pull: { posts: post_id } }
+    );
+
     const updatedUser = await userModel.findById(user._id);
     const { points } = await getUserPoint({ user: updatedUser });
 

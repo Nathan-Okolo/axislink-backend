@@ -274,6 +274,7 @@ export const search = async (query, queryPage, queryLimit) => {
       userModel.find({
         $or: [
           { username: new RegExp(query, "i") }, // Search usernames
+          { displayName: new RegExp(query, "i") }, // Search displayName
           { bio: new RegExp(query, "i") }, // Search bios
         ],
       }),

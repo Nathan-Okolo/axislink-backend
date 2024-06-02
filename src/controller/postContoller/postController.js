@@ -10,6 +10,7 @@ import {
   viewAllPostComment,
   viewAllPosts,
   viewFollowersPost,
+  viewMyPosts,
   viewPostComment,
   viewSinglePost,
 } from "../../services/postServices/postServices.js";
@@ -20,6 +21,14 @@ export const makePostHandler = async (req, res) => {
   const newPost = await makePost({ body, user });
 
   res.send(appResponse("Succefully made a new post", newPost));
+};
+
+export const viewMyPostHandler = async (req, res) => {
+  const { user, query } = req;
+
+  const post = await viewMyPosts({ user, query });
+
+  res.send(appResponse("viewing my post successfully", post));
 };
 
 export const createCommentHandler = async (req, res) => {

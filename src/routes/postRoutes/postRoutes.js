@@ -12,6 +12,7 @@ import {
   viewAllPostCommentHandler,
   viewAllPostsHandler,
   viewFollowersPostHandler,
+  viewMyPostHandler,
   viewPostCommentHandler,
   viewSinglePostHandler,
 } from "../../controller/postContoller/postController.js";
@@ -30,6 +31,11 @@ const postRoute = () => {
     Validate(postSchema),
     authentication,
     makePostHandler
+  );
+  postServiceRoutes.get(
+    "/view-my-posts",
+    authentication,
+    viewMyPostHandler
   );
   postServiceRoutes.post(
     "/make-comment/:post_id",
