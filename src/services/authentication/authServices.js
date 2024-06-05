@@ -155,11 +155,11 @@ export const loginUser = async ({ body }) => {
 
   // Check if OTP is verified
   if (!checkUser.isVerified) {
-    throw new BadRequestError(
-      "Please verify your account using the OTP sent to your email"
-    );
+    return {
+      message: "account not verified",
+      isVerified: false
+    };
   }
-
   const randToken = await codeGenerator(4, "1234ABCD");
 
   //save token inside user
