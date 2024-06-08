@@ -290,7 +290,7 @@ export const likePost = async ({ user, post_id }) => {
           },
         ],
         { session }
-      );
+      ); 
     }
 
     await session.commitTransaction();

@@ -231,13 +231,14 @@ export const deleteUserProfile = async (user) => {
 export const getUserPoint = async ({ user }) => {
   const userPosts = await postModel
     .find({ userId: user._id })
-    .populate("likes");
+    // .populate("likes");
   if (!userPosts) {
     throw new NotFoundError("likes not found");
   }
+  console.log(userPosts)
   const userComments = await commentModel
     .find({ userId: user._id })
-    .populate("likes");
+    // .populate("likes");
   if (!userComments) {
     throw new NotFoundError("likes not found");
   }
