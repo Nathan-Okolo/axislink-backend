@@ -1,4 +1,5 @@
 import env from "../../config/env.js";
+import mongoose from 'mongoose';
 import {
   BadRequestError,
   InternalServerError,
@@ -228,35 +229,61 @@ export const deleteUserProfile = async (user) => {
   }
 };
 
-export const getUserPoint = async ({ user }) => {
-  const userPosts = await postModel
-    .find({ userId: user._id })
-    // .populate("likes");
-  if (!userPosts) {
-    throw new NotFoundError("likes not found");
-  }
-  console.log(userPosts)
-  const userComments = await commentModel
-    .find({ userId: user._id })
-    // .populate("likes");
-  if (!userComments) {
-    throw new NotFoundError("likes not found");
-  }
-  // Combine likes from both posts and comments into one array
-  let allLikes = [];
-  userPosts.forEach((post) => {
-    allLikes = allLikes.concat(post.likes);
-  });
-  userComments.forEach((comment) => {
-    allLikes = allLikes.concat(comment.likes);
-  });
-  const likeCount = allLikes.length;
-  const points = likeCount / 10;
-  user.likes = likeCount;
-  user.points = points;
-  await user.save();
+// export const getUserPoint = async ({ user }) => {
+//   const userPosts = await postModel.find({ userId: user._id });
+//   const userComments = await commentModel.find({ userId: user._id });
 
-  return { points, likeCount, user };
+//   let allLikes = [];
+//   userPosts.forEach((post) => {
+//     allLikes = allLikes.concat(post.likes);
+//   });
+//   userComments.forEach((comment) => {
+//     allLikes = allLikes.concat(comment.likes);
+//   });
+
+//   const likeCount = allLikes.length;
+//   const points = likeCount / 10;
+
+//   // Update the user points and likes directly in the database
+//   await userModel.updateOne(
+//     { _id: user._id },
+//     { likes: likeCount, points: points }
+//   );
+
+//   return { points, likeCount, user: { user, likes: likeCount, points: points } };
+// };
+
+export const getUserPoint = async ({ user }) => {
+  const userId = new mongoose.Types.ObjectId(user._id);
+
+  const aggregationPipeline = [
+    {
+      $match: { userId: userId }
+    },
+    {
+      $group: {
+        _id: null,
+        totalPostLikes: { $sum: { $size: "$likes" } }
+      }
+    }
+  ];
+
+  const postLikesAggregation = await postModel.aggregate(aggregationPipeline);
+  const commentLikesAggregation = await commentModel.aggregate(aggregationPipeline);
+
+  const totalPostLikes = postLikesAggregation.length ? postLikesAggregation[0].totalPostLikes : 0;
+  const totalCommentLikes = commentLikesAggregation.length ? commentLikesAggregation[0].totalPostLikes : 0;
+
+  const likeCount = totalPostLikes + totalCommentLikes;
+  const points = likeCount / 10;
+
+  // Update the user points and likes directly in the database
+  await userModel.updateOne(
+    { _id: userId },
+    { likes: likeCount, points: points }
+  );
+
+  return { points, likeCount, user: { user, likes: likeCount, points: points } };
 };
 
 export const search = async (query, queryPage, queryLimit) => {
@@ -314,27 +341,99 @@ export const search = async (query, queryPage, queryLimit) => {
   }
 };
 
+// export const getLeaderBoard = async ({ query, user }) => {
+//   const { search, page = 1, limit = 10 } = query;
+//   // Build the search query
+//   const searchQuery = search
+//     ? { username: { $regex: search, $options: "i" } }
+//     : {};
+
+//   try {
+//     // Find all users to calculate positions
+//     const allUsers = await userModel
+//       .find(searchQuery, "username points avatar")
+//       .sort({ points: -1 });
+
+//     if (!allUsers.length) {
+//       throw new BadRequestError("No leaderboard found");
+//     }
+
+//     // Add positions to all users based on their points
+//     const allUsersWithPosition = allUsers.map((user, index) => ({
+//       position: index + 1,
+//       ...user._doc,
+//     }));
+
+//     // Calculate pagination
+//     const skip = (page - 1) * limit;
+//     const paginatedUsers = allUsersWithPosition.slice(skip, skip + limit);
+
+//     // Calculate total number of pages
+//     const totalPages = Math.ceil(allUsersWithPosition.length / limit);
+
+//     // Find the current user's points and position if the user object is provided
+//     let currentUserPoints = null;
+//     let currentUserPosition = null;
+//     let currentUserName = null;
+//     let currentUserAvatar = null;
+//     let currentUser_Id = null;
+//     if (user && user._id) {
+//       const currentUserId = user._id.toString();
+//       const currentUser = allUsersWithPosition.find(
+//         (u) => u._id.toString() === currentUserId
+//       );
+//       if (currentUser) {
+//         currentUserPoints = currentUser.points;
+//         currentUserPosition = currentUser.position;
+//         currentUserName = currentUser.username;
+//         currentUserAvatar = currentUser.avatar;
+//         currentUser_Id = currentUser._id;
+//       }
+//     }
+
+//     return {
+//       currentPage: page,
+//       totalPages: totalPages,
+//       limit: limit,
+//       leaderboard: paginatedUsers,
+//       currentUser: {
+//         points: currentUserPoints,
+//         position: currentUserPosition,
+//         name: currentUserName,
+//         avatar: currentUserAvatar,
+//         _id: currentUser_Id,
+//       },
+//     };
+//   } catch (error) {
+//     throw new BadRequestError(error.message || "Error fetching leaderboard");
+//   }
+// };
+
 export const getLeaderBoard = async ({ query, user }) => {
   const { search, page = 1, limit = 10 } = query;
-  // Build the search query
-  const searchQuery = search
-    ? { username: { $regex: search, $options: "i" } }
-    : {};
+  const searchQuery = search ? { username: { $regex: search, $options: "i" } } : {};
 
   try {
-    // Find all users to calculate positions
-    const allUsers = await userModel
-      .find(searchQuery, "username points avatar")
-      .sort({ points: -1 });
+    // Find all users matching the search query
+    const allUsers = await userModel.find(searchQuery, "username avatar").lean();
 
     if (!allUsers.length) {
       throw new BadRequestError("No leaderboard found");
     }
 
+    // Calculate points for each user
+    for (const eachUser of allUsers) {
+      const { points } = await getUserPoint({ user: eachUser });
+      eachUser.points = points;
+    }
+
+    // Sort users by points in descending order
+    allUsers.sort((a, b) => b.points - a.points);
+
     // Add positions to all users based on their points
     const allUsersWithPosition = allUsers.map((user, index) => ({
       position: index + 1,
-      ...user._doc,
+      ...user,
     }));
 
     // Calculate pagination
@@ -350,6 +449,7 @@ export const getLeaderBoard = async ({ query, user }) => {
     let currentUserName = null;
     let currentUserAvatar = null;
     let currentUser_Id = null;
+
     if (user && user._id) {
       const currentUserId = user._id.toString();
       const currentUser = allUsersWithPosition.find(
