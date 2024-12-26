@@ -27,7 +27,7 @@ app.use(baseURL, rootRouter);
 app.use("*", (req, res) => {
   res
     .status(404)
-    .send({ message: "Resource URL not found", success: false, data: null });
+    .send({ message: "Resource URL not available", success: false, data: null });
 });
 
 app.use(ErrorHandler);
