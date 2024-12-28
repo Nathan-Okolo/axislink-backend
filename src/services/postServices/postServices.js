@@ -140,6 +140,10 @@ export const viewAllPosts = async ({ page, limit }) => {
             path: "userId",
             select: "username avatar", // Populate comment's user details
           },
+          populate: {
+            path: "likes",
+            select: "userId postId", // Populate comment's user details
+          },
         })
         .populate("userId", "username avatar"), // Populate post's user details
       postModel.countDocuments(), // Count the total number of posts
