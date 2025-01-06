@@ -14,14 +14,21 @@ import notificationModel from "../../models/notificationModel.js";
 export const viewProfile = async ({ user }) => {
   const userProfile = await userModel.findOne(user._id).populate({
     path: "posts",
-    populate: { path: "comments" }, // Populate comments within posts
+    populate: [
+      {
+        path: "comments",
+      },
+      {
+        path: "userId",
+        select: "username avatar", // Populate user details in posts
+      },
+    ],
   });
   if (!userProfile) {
     throw new NotFoundError("User is not found");
   }
   return userProfile;
 };
-
 export const viewUser = async ({ user_id }) => {
   const userProfile = await userModel
     .findById(user_id)
