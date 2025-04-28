@@ -43,7 +43,7 @@ const postRoute = () => {
     "/update-appointment",
     updateAppointmentHandler
   );
-  postServiceRoutes.get(
+  postServiceRoutes.post(
     "/view-appointment",
     viewApponintmentHandler
   );
