@@ -5,6 +5,7 @@ import {
   resendOtpHandler,
   resetPasswordHandler,
   signUpHandler,
+  signUpPatientHandler,
   verifyOtpHandler,
 } from "../../controller/authentication/authControllers.js";
 import Validate from "../../validators/index.js";
@@ -19,6 +20,7 @@ import {
 const userAuthRoutes = express.Router();
 
 const authRoute = () => {
+  userAuthRoutes.post("/signup-patient", signUpPatientHandler);
   userAuthRoutes.post("/signup", Validate(signUpSchema), signUpHandler);
   userAuthRoutes.post(
     "/otp-verification",

@@ -16,6 +16,7 @@ import { formattMailInfo } from "../../utils/mailFormatter.js";
 import { messageBird } from "../../utils/msgBird.js";
 import env from "../../config/env.js";
 import notificationModel from "../../models/notificationModel.js";
+import patientModel from "../../models/patientModel.js";
 
 export const signUpUser = async ({ body }) => {
   try {
@@ -43,7 +44,7 @@ export const signUpUser = async ({ body }) => {
 
     // Save the user to the database
     const data = {
-      displayName:body.displayName,
+      displayName: body.displayName,
       username: body.username,
       email: body.email,
       password,
@@ -77,6 +78,69 @@ export const signUpUser = async ({ body }) => {
       user_id: createUser._id,
     });
     return { hash, email: body.email };
+  } catch (error) {
+    console.log(error);
+    throw new BadRequestError(
+      error.message || "Invalid request. Please check your inputs"
+    );
+  }
+};
+
+export const signUpPatient = async ({ body }) => {
+  try {
+    // Check if the email and username already exist
+    const existingEmailUser = await patientModel.findOne({ email: body.email });
+
+    if (existingEmailUser) {
+      throw new BadRequestError("Email already exists");
+    }
+
+    // Generate OTP
+    const otp = await codeGenerator(4, "1234567890");
+
+    // Prepare patient data
+    const patientData = {
+      contactInformation: body.contactInformation,
+      medicalInfo: body.medicalInfo,
+      emergencyContacts: body.emergencyContacts,
+      vitals: body.vitals,
+      otp,
+      gender: body.gender,
+      password: body.password,
+      username: body.username,
+      dob: body.dob,
+      profileImage: body.profileImage,
+    };
+    const createUser = await patientModel.create(patientData);
+    if (!createUser) {
+      throw new InternalServerError("Failed to create user");
+    }
+
+    // Send Welcome email
+    const mailData = {
+      email: body.email,
+      subject: "Welcome to Our Platform!",
+      type: "html",
+      html: `<p>Dear ${body.username},</p>
+         <p>Welcome to our platform! We are excited to have you on board.</p>
+         <p>If you have any questions, feel free to reach out to our support team.</p>
+         <p>Best regards,</p>
+         <p>The Team</p>`,
+      text: `Dear ${body.username},\n\nWelcome to our platform! We are excited to have you on board.\n\nIf you have any questions, feel free to reach out to our support team.\n\nBest regards,\nThe Team`,
+    };
+
+    const formattedMailInfo = await formattMailInfo(mailData, env);
+    const msgDelivered = await messageBird(formattedMailInfo);
+
+    if (!msgDelivered) {
+      throw new InternalServerError("Failed to send OTP email");
+    }
+    // create notification for member
+    await notificationModel.create({
+      note: `You have successfully  created a new account`,
+      user_id: createUser._id,
+    });
+    return { otp, createUser };
   } catch (error) {
     console.log(error);
     throw new BadRequestError(

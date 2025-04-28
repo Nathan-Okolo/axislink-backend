@@ -4,6 +4,7 @@ import {
   loginUser,
   resendOtp,
   resetPassword,
+  signUpPatient,
   signUpUser,
   userOtpVerifcation,
 } from "../../services/authentication/authServices.js";
@@ -13,6 +14,13 @@ export const signUpHandler = async (req, res) => {
   const user = await signUpUser({ body });
 
   res.send(appResponse("new user onboarded successfully", user));
+};
+
+export const signUpPatientHandler = async (req, res) => {
+  const { body } = req;
+  const user = await signUpPatient({ body });
+
+  res.send(appResponse("new patient onboarded successfully", user));
 };
 
 export const verifyOtpHandler = async (req, res) => {
