@@ -88,15 +88,20 @@ export const signUpUser = async ({ body }) => {
 
 export const signUpPatient = async ({ body }) => {
   try {
-    // Check if the email and username already exist
-    const existingEmailUser = await patientModel.findOne({ email: body.email });
+    // Check if the email already exists
+    const existingEmailUser = await patientModel.findOne({
+      "contactInformation.email": body.contactInformation.email,
+    });
 
     if (existingEmailUser) {
       throw new BadRequestError("Email already exists");
     }
 
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(body.password, 12);
+
     // Generate OTP
-    const otp = await codeGenerator(4, "1234567890");
+    const otp = await codeGenerator(4, "1234ABCD");
 
     // Prepare patient data
     const patientData = {
@@ -106,26 +111,28 @@ export const signUpPatient = async ({ body }) => {
       vitals: body.vitals,
       otp,
       gender: body.gender,
-      password: body.password,
+      password: hashedPassword,
       username: body.username,
       dob: body.dob,
       profileImage: body.profileImage,
     };
+
+    // Save the patient to the database
     const createUser = await patientModel.create(patientData);
     if (!createUser) {
-      throw new InternalServerError("Failed to create user");
+      throw new InternalServerError("Failed to create patient");
     }
 
     // Send Welcome email
     const mailData = {
-      email: body.email,
+      email: body.contactInformation.email,
       subject: "Welcome to Our Platform!",
       type: "html",
       html: `<p>Dear ${body.username},</p>
-         <p>Welcome to our platform! We are excited to have you on board.</p>
-         <p>If you have any questions, feel free to reach out to our support team.</p>
-         <p>Best regards,</p>
-         <p>The Team</p>`,
+             <p>Welcome to our platform! We are excited to have you on board.</p>
+             <p>If you have any questions, feel free to reach out to our support team.</p>
+             <p>Best regards,</p>
+             <p>The Team</p>`,
       text: `Dear ${body.username},\n\nWelcome to our platform! We are excited to have you on board.\n\nIf you have any questions, feel free to reach out to our support team.\n\nBest regards,\nThe Team`,
     };
 
@@ -133,16 +140,18 @@ export const signUpPatient = async ({ body }) => {
     const msgDelivered = await messageBird(formattedMailInfo);
 
     if (!msgDelivered) {
-      // throw new InternalServerError("Failed to send OTP email");
+      console.warn("Failed to send Welcome email");
     }
-    // create notification for member
+
+    // Create notification for the patient
     await notificationModel.create({
-      note: `You have successfully  created a new account`,
+      note: `You have successfully created a new account`,
       user_id: createUser._id,
     });
+
     return { otp, createUser };
   } catch (error) {
-    console.log(error);
+    console.error(error);
     throw new BadRequestError(
       error.message || "Invalid request. Please check your inputs"
     );
