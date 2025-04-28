@@ -104,7 +104,7 @@ export const viewApponintment = async ({ body }) => {
           patientId: member._id,
         })
         .sort({ createdAt: -1 }) // Sort by creation date in descending order
-        .skip(skip)
+        // .skip(skip)
         // .limit(pageSize)
 
     // Return appointments along with metadata
