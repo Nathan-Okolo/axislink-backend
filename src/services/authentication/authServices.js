@@ -133,7 +133,7 @@ export const signUpPatient = async ({ body }) => {
     const msgDelivered = await messageBird(formattedMailInfo);
 
     if (!msgDelivered) {
-      throw new InternalServerError("Failed to send OTP email");
+      // throw new InternalServerError("Failed to send OTP email");
     }
     // create notification for member
     await notificationModel.create({
