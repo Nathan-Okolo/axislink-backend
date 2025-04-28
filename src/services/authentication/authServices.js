@@ -96,7 +96,9 @@ export const signUpPatient = async ({ body }) => {
     if (existingEmailUser) {
       throw new BadRequestError("Email already exists");
     }
-
+    if (!body.profileImage) {
+      body.profileImage = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ7vB-49_BT-dirwttYZaeE_VByjlQ3raVJZg&s'
+    }
     // Hash the password
     const hashedPassword = await bcrypt.hash(body.password, 12);
 
