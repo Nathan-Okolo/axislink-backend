@@ -17,7 +17,7 @@ import userAppointmentModel from "../../models/userAppointmentModel.js";
 
 export const createAppointment = async ({ body }) => {
   try {
-    const { patientId, reason, date } = body;
+    const { patientId, reason, date , provider} = body;
 
     // Validate required fields
     if (!patientId || !reason || !date) {
@@ -26,6 +26,7 @@ export const createAppointment = async ({ body }) => {
 
     // Create the appointment
     const newAppointment = await userAppointmentModel.create({
+      provider,
       patientId,
       reason,
       date,
@@ -49,7 +50,7 @@ export const createAppointment = async ({ body }) => {
 
 export const updateAppointment = async ({ body }) => {
   try {
-    const { appointmentId, status } = body;
+    const { appointmentId, status,provider } = body;
 
     // Validate required fields
     if (!appointmentId || status === undefined) {
@@ -59,7 +60,7 @@ export const updateAppointment = async ({ body }) => {
     // Update the appointment
     const updatedAppointment = await userAppointmentModel.findByIdAndUpdate(
       appointmentId,
-      { status },
+      { status, provider},
       { new: true }
     );
 

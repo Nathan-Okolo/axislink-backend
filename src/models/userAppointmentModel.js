@@ -5,6 +5,7 @@ const { Schema, model } = mongoose;
 const appointmentSchema = new Schema(
     {
         patientId: { type: Schema.Types.ObjectId, ref: "Patient" },
+        provider: { type: String, default: "Dr. Smith" },
         reason: { type: String, required: true },
         date: { type: String, required: true },
         status: {
