@@ -181,7 +181,7 @@ export const viewMyPosts = async ({ user, query }) => {
         path: "originalPostId",
         populate: {
           path: "userId",
-          select: "username avatar",
+          select: "username avatar", 
         },
       })
       .populate({
