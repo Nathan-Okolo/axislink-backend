@@ -143,12 +143,6 @@ export const signUpPatient = async ({ body }) => {
       console.warn("Failed to send Welcome email");
     }
 
-    // Create notification for the patient
-    await notificationModel.create({
-      note: `You have successfully created a new account`,
-      user_id: createUser._id,
-    });
-
     return { otp, createUser };
   } catch (error) {
     console.error(error);
@@ -263,6 +257,65 @@ export const loginPatient = async ({ body }) => {
   // Compare passwords directly
   if (body.password !== checkPatient.password) {
     throw new InvalidError("Invalid Email or Password");
+  }
+
+  // Convert user to JSON
+  const user = checkPatient.toJSON();
+
+  // Return token
+  return { user };
+};
+
+export const getCode = async ({ body }) => {
+  // Find the patient by email
+  const checkPatient = await patientModel.findOne({
+    "contactInformation.email": body.email,
+  });
+  const otp = await codeGenerator(4, "1234ABCD");
+  checkPatient.otp = otp;
+  checkPatient.save();
+  // If patient not found, throw error
+  if (!checkPatient) {
+    throw new InvalidError("Invalid Email or Password");
+  }
+
+  // Send OTP email
+  const mailData = {
+    email: checkPatient.contactInformation.email,
+    subject: "Your OTP Code for Account Access",
+    type: "html",
+    html: `<p>Dear ${checkPatient.username},</p>
+         <p>Your OTP code to share with your healthcare provider for account access is: <strong>${otp}</strong>.</p>
+         <p>Please provide this code to your healthcare provider to enable them view your account.</p>
+         <p>If you have any questions, feel free to reach out to our support team.</p>
+         <p>Best regards,</p>
+         <p>The Team</p>`
+  };
+
+  const formattedMailInfo = await formattMailInfo(mailData, env);
+  const msgDelivered = await messageBird(formattedMailInfo);
+
+  if (!msgDelivered) {
+    console.warn("Failed to send Welcome email");
+  }
+
+  return true
+};
+
+export const loginPatientOrg = async ({ body }) => {
+  // Find the patient by email
+  const checkPatient = await patientModel.findOne({
+    "contactInformation.email": body.email,
+  });
+
+  // If patient not found, throw error
+  if (!checkPatient) {
+    throw new InvalidError("Invalid Authorization");
+  }
+
+  // Compare passwords directly
+  if (body.otp !== checkPatient.otp) {
+    throw new InvalidError("Invalid Authorization");
   }
 
   // Convert user to JSON

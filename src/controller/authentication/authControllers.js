@@ -1,7 +1,9 @@
 import appResponse from "../../lib/appResponse.js";
 import {
   forgotPassword,
+  getCode,
   loginPatient,
+  loginPatientOrg,
   loginUser,
   resendOtp,
   resetPassword,
@@ -38,6 +40,18 @@ export const verifyOtpHandler = async (req, res) => {
 export const LoginHandler = async (req, res) => {
   const { body } = req;
   const loggedIn = await loginUser({ body });
+  res.send(appResponse(`Logged in successfully`, loggedIn));
+};
+
+export const getCodeHandler = async (req, res) => {
+  const { body } = req;
+  const loggedIn = await getCode({ body });
+  res.send(appResponse(`code sent`, loggedIn));
+};
+
+export const loginPatientOrgHandler = async (req, res) => {
+  const { body } = req;
+  const loggedIn = await loginPatientOrg({ body });
   res.send(appResponse(`Logged in successfully`, loggedIn));
 };
 
