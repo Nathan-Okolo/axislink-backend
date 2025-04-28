@@ -271,6 +271,10 @@ export const getCode = async ({ body }) => {
   const checkPatient = await patientModel.findOne({
     "contactInformation.email": body.email,
   });
+
+  if (!checkPatient) {
+    throw new InvalidError("Patient not found");
+  }
   const otp = await codeGenerator(4, "1234ABCD");
   checkPatient.otp = otp;
   checkPatient.save();
