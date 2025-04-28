@@ -90,7 +90,7 @@ export const signUpPatient = async ({ body }) => {
   try {
     // Check if the email already exists
     const existingEmailUser = await patientModel.findOne({
-      "contactInformation.email": body.contactInformation.email,
+      "contactInformation.email": body.email,
     });
 
     if (existingEmailUser) {
@@ -99,8 +99,6 @@ export const signUpPatient = async ({ body }) => {
     if (!body.profileImage) {
       body.profileImage = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ7vB-49_BT-dirwttYZaeE_VByjlQ3raVJZg&s'
     }
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(body.password, 12);
 
     // Generate OTP
     const otp = await codeGenerator(4, "1234ABCD");
@@ -113,7 +111,7 @@ export const signUpPatient = async ({ body }) => {
       vitals: body.vitals,
       otp,
       gender: body.gender,
-      password: hashedPassword,
+      password: body.password,
       username: body.username,
       dob: body.dob,
       profileImage: body.profileImage,
@@ -249,6 +247,29 @@ export const loginUser = async ({ body }) => {
 
   // Return token
   return { token };
+};
+
+export const loginPatient = async ({ body }) => {
+  // Find the patient by email
+  const checkPatient = await patientModel.findOne({
+    "contactInformation.email": email,
+  });
+
+  // If patient not found, throw error
+  if (!checkPatient) {
+    throw new InvalidError("Invalid Email or Password");
+  }
+
+  // Compare passwords directly
+  if (password !== checkPatient.password) {
+    throw new InvalidError("Invalid Email or Password");
+  }
+
+  // Convert user to JSON
+  const user = checkPatient.toJSON();
+
+  // Return token
+  return { user };
 };
 
 export const forgotPassword = async ({ body }) => {

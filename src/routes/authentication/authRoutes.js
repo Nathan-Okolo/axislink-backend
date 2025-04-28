@@ -2,6 +2,7 @@ import express from "express";
 import {
   LoginHandler,
   forgotPasswordHandler,
+  loginPatientHandler,
   resendOtpHandler,
   resetPasswordHandler,
   signUpHandler,
@@ -32,6 +33,13 @@ const authRoute = () => {
     Validate(validateLoginUserSchema),
     LoginHandler
   );
+
+  userAuthRoutes.post(
+    "/patient-login",
+    Validate(validateLoginUserSchema),
+    loginPatientHandler
+  );
+
   userAuthRoutes.post(
     "/forgot_password",
     Validate(validateForgotPassword),
