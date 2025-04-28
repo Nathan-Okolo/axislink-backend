@@ -1,5 +1,6 @@
 import appResponse from "../../lib/appResponse.js";
 import {
+  createAppointment,
   createComment,
   deleteComment,
   deletePost,
@@ -7,8 +8,10 @@ import {
   likePost,
   makePost,
   repostPost,
+  updateAppointment,
   viewAllPostComment,
   viewAllPosts,
+  viewApponintment,
   viewFollowersPost,
   viewMyPosts,
   viewPostComment,
@@ -21,6 +24,29 @@ export const makePostHandler = async (req, res) => {
   const newPost = await makePost({ body, user });
 
   res.send(appResponse("Succefully made a new post", newPost));
+};
+
+export const createAppointmentHandler = async (req, res) => {
+  const { body, user } = req;
+
+  const newPost = await createAppointment({ body, user });
+
+  res.send(appResponse("Succefully made a new Appointment", newPost));
+};
+
+export const updateAppointmentHandler = async (req, res) => {
+  const { body, user } = req;
+
+  const newPost = await updateAppointment({ body, user });
+
+  res.send(appResponse("Succefully made a new Appointment", newPost));
+};
+
+export const viewApponintmentHandler = async (req, res) => {
+  const { body } = req;
+  const posts = await viewApponintment({ body });
+
+  res.send(appResponse("Fatched all post succefully", posts));
 };
 
 export const viewMyPostHandler = async (req, res) => {

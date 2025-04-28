@@ -2,6 +2,7 @@ import express from "express";
 import Validate from "../../validators/index.js";
 import { authentication } from "../../middlewares/authentication.js";
 import {
+  createAppointmentHandler,
   createCommentHandler,
   deleteCommentsHandler,
   deletePostsHandler,
@@ -9,8 +10,10 @@ import {
   likePostHandler,
   makePostHandler,
   repostPostHandler,
+  updateAppointmentHandler,
   viewAllPostCommentHandler,
   viewAllPostsHandler,
+  viewApponintmentHandler,
   viewFollowersPostHandler,
   viewMyPostHandler,
   viewPostCommentHandler,
@@ -31,6 +34,18 @@ const postRoute = () => {
     Validate(postSchema),
     authentication,
     makePostHandler
+  );
+  postServiceRoutes.post(
+    "/make-appointment",
+    createAppointmentHandler
+  );
+  postServiceRoutes.post(
+    "/update-appointment",
+    updateAppointmentHandler
+  );
+  postServiceRoutes.get(
+    "/view-appointment",
+    viewApponintmentHandler
   );
   postServiceRoutes.get(
     "/view-my-posts",

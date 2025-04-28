@@ -12,6 +12,109 @@ import userModel from "../../models/userModel.js";
 import { getUserPoint } from "../userServices/userServices.js";
 import notificationModel from "../../models/notificationModel.js";
 import mongoose from "mongoose";
+import patientModel from "../../models/patientModel.js";
+import userAppointmentModel from "../../models/userAppointmentModel.js";
+
+export const createAppointment = async ({ body }) => {
+  try {
+    const { patientId, reason, date } = body;
+
+    // Validate required fields
+    if (!patientId || !reason || !date) {
+      throw new BadRequestError("Patient ID, reason, and date are required.");
+    }
+
+    // Create the appointment
+    const newAppointment = await userAppointmentModel.create({
+      patientId,
+      reason,
+      date,
+    });
+
+    if (!newAppointment) {
+      throw new InternalServerError("Failed to create appointment.");
+    }
+
+    return {
+      message: "Appointment created successfully.",
+      appointment: newAppointment,
+    };
+  } catch (error) {
+    console.error("Error creating appointment:", error);
+    throw new BadRequestError(
+      error.message || "Invalid request. Please check your inputs."
+    );
+  }
+};
+
+export const updateAppointment = async ({ body }) => {
+  try {
+    const { appointmentId, status } = body;
+
+    // Validate required fields
+    if (!appointmentId || status === undefined) {
+      throw new BadRequestError("Appointment ID and status are required.");
+    }
+
+    // Update the appointment
+    const updatedAppointment = await userAppointmentModel.findByIdAndUpdate(
+      appointmentId,
+      { status },
+      { new: true }
+    );
+
+    if (!updatedAppointment) {
+      throw new InternalServerError("Failed to update appointment.");
+    }
+
+    return {
+      message: "Appointment updated successfully.",
+      appointment: updatedAppointment,
+    };
+  } catch (error) {
+    console.error("Error updating appointment:", error);
+    throw new BadRequestError(
+      error.message || "Invalid request. Please check your inputs."
+    );
+  }
+}
+
+export const viewApponintment = async ({ body }) => {
+
+  try {
+    // Parse page and limit parameters to integers
+    const pageNumber = parseInt(10);
+    const pageSize = parseInt(10);
+    // Find the member by email
+    const member = await patientModel.findOne({
+      "contactInformation.email": body.email,
+    });
+
+    if (!member) {
+      throw new NotFoundError("Patient not found");
+    }
+
+    // Calculate the number of documents to skip
+    const skip = (pageNumber - 1) * pageSize;
+
+    // Fetch appointments and total appointment count concurrently
+    const appointments = await
+      userAppointmentModel
+        .find({ patientId: member._id })
+        .sort({ createdAt: -1 }) // Sort by creation date in descending order
+        .skip(skip)
+        .limit(pageSize)
+        .populate(patientId) // Populate patient details
+
+    // Return appointments along with metadata
+    return {
+      appointments,
+    };
+  } catch (error) {
+    console.error("Failed to fetch appointments:", error);
+    throw new Error(`Failed to fetch appointments: ${error.message}`);
+  }
+};
 
 export const makePost = async ({ user, body }) => {
   const hashtagRegex = /#[\w-]+/g;
@@ -294,7 +397,7 @@ export const likePost = async ({ user, post_id }) => {
           },
         ],
         { session }
-      ); 
+      );
     }
 
     await session.commitTransaction();
@@ -629,8 +732,8 @@ export const deleteComment = async ({ user, post_id, comment_id }) => {
     }
 
     // Ensure the user is either the author of the comment or the post
-    const postOwnerId = post.userId.toString(); 
-    const commentOwnerId = comment.userId.toString(); 
+    const postOwnerId = post.userId.toString();
+    const commentOwnerId = comment.userId.toString();
 
     if (
       commentOwnerId !== user._id.toString() &&
