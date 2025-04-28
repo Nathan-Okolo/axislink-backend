@@ -100,11 +100,12 @@ export const viewApponintment = async ({ body }) => {
     // Fetch appointments and total appointment count concurrently
     const appointments = await
       userAppointmentModel
-        .find({ patientId: member._id })
+        .find({
+          patientId: member._id,
+        })
         .sort({ createdAt: -1 }) // Sort by creation date in descending order
         .skip(skip)
-        .limit(pageSize)
-        .populate(patientId) // Populate patient details
+        // .limit(pageSize)
 
     // Return appointments along with metadata
     return {
