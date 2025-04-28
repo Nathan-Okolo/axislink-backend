@@ -252,7 +252,7 @@ export const loginUser = async ({ body }) => {
 export const loginPatient = async ({ body }) => {
   // Find the patient by email
   const checkPatient = await patientModel.findOne({
-    "contactInformation.email": email,
+    "contactInformation.email": body.email,
   });
 
   // If patient not found, throw error
@@ -261,7 +261,7 @@ export const loginPatient = async ({ body }) => {
   }
 
   // Compare passwords directly
-  if (password !== checkPatient.password) {
+  if (body.password !== checkPatient.password) {
     throw new InvalidError("Invalid Email or Password");
   }
 
